@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
 import { 
   Upload, 
   Loader, 
@@ -17,20 +15,9 @@ import {
   Phone,
   Save
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-
-interface Post {
-  _id: string;
-  title: string;
-  description: string;
-  mediaUrl: string;
-  mediaType: 'image' | 'video';
-  status: string;
-  category: string;
-  location: string;
-  votes: string[];
-  createdAt: string;
-}
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { usePosts } from '../context/PostContext';
 
 interface UserProfile {
   name: string;
@@ -39,10 +26,23 @@ interface UserProfile {
   address: string;
 }
 
+const categories = [
+  'Infrastructure & Public Services',
+  'Environmental Concerns',
+  'Law & Order Issues',
+  'Housing & Urban Development',
+  'Education & Healthcare',
+  'Unemployment & Economic Issues',
+  'Digital & Technological Issues',
+  'Governance & Political Issues',
+  'Social Issues'
+];
+
 const Profile = () => {
-  const { user, logout } = useAuth();
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { user, logout, isAuthenticated } = useAuth();
+  const { userPosts, loading, error, fetchUserPosts, createPost } = usePosts();
+  
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [media, setMedia] = useState<File | null>(null);
@@ -60,52 +60,24 @@ const Profile = () => {
   });
   const [activeTab, setActiveTab] = useState('posts');
 
-  // Dummy categories
-  const categories = [
-    'Infrastructure & Public Services',
-    'Environmental Concerns',
-    'Law & Order Issues',
-    'Housing & Urban Development',
-    'Education & Healthcare',
-    'Unemployment & Economic Issues',
-    'Digital & Technological Issues',
-    'Governance & Political Issues'
-  ];
-
-  // Dummy posts for testing
-  const dummyPosts: Post[] = [
-    {
-      _id: '1',
-      title: 'Broken Street Light on Main Street',
-      description: 'The street light near 123 Main Street has been out for weeks, creating a safety hazard for pedestrians at night.',
-      mediaUrl: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=800&auto=format&fit=crop',
-      mediaType: 'image',
-      status: 'posted',
-      category: 'Infrastructure & Public Services',
-      location: 'Main Street, Downtown',
-      votes: ['1', '2', '3'],
-      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      _id: '2',
-      title: 'Pothole Damage on Oak Avenue',
-      description: 'Large pothole causing damage to vehicles. Multiple cars have already been affected. Urgent repair needed.',
-      mediaUrl: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=800&auto=format&fit=crop',
-      mediaType: 'image',
-      status: 'in_progress',
-      category: 'Infrastructure & Public Services',
-      location: 'Oak Avenue, Westside',
-      votes: ['1', '2', '3', '4', '5'],
-      createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    } else {
+      fetchUserPosts();
     }
-  ];
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
-    // In a real app, this would fetch from the server
-    // For now, we'll use dummy data
-    setPosts(dummyPosts);
-    setLoading(false);
-  }, []);
+    // Update user profile when user data changes
+    if (user) {
+      setUserProfile(prev => ({
+        ...prev,
+        name: user.name,
+        email: user.email || ''
+      }));
+    }
+  }, [user]);
 
   useEffect(() => {
     // Get user's location when creating a new post
@@ -133,26 +105,23 @@ const Profile = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!media) return;
+    if (!title || !description || !category) return;
 
     setUploading(true);
     try {
-      // In a real app, this would upload to the server
-      // For now, we'll simulate adding a new post to our local state
-      const newPost: Post = {
-        _id: `new-${Date.now()}`,
+      // In a real app, we would upload the media file to a storage service
+      // and get back a URL. For now, we'll use the preview URL or a placeholder
+      const mediaUrl = previewUrl || 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&auto=format&fit=crop';
+      
+      await createPost({
         title,
         description,
-        mediaUrl: previewUrl || '',
+        mediaUrl,
         mediaType: 'image',
-        status: 'posted',
         category,
-        location,
-        votes: [],
-        createdAt: new Date().toISOString()
-      };
-
-      setPosts([newPost, ...posts]);
+        location: location || 'Unknown location'
+      });
+      
       setTitle('');
       setDescription('');
       setMedia(null);
@@ -245,12 +214,12 @@ const Profile = () => {
                 <p className="text-gray-600">{user?.email}</p>
                 <div className="mt-2 flex space-x-6">
                   <div>
-                    <span className="font-bold text-gray-900">{posts.length}</span>
+                    <span className="font-bold text-gray-900">{userPosts.length}</span>
                     <span className="ml-1 text-gray-600">posts</span>
                   </div>
                   <div>
                     <span className="font-bold text-gray-900">
-                      {posts.reduce((sum, post) => sum + post.votes.length, 0)}
+                      {userPosts.reduce((sum, post) => sum + post.votes.length, 0)}
                     </span>
                     <span className="ml-1 text-gray-600">votes</span>
                   </div>
@@ -455,7 +424,7 @@ const Profile = () => {
                 />
                 <label
                   htmlFor="media-upload"
-                  className="cursor-pointer flex items-center justify-center border-2 border -dashed border-gray-300 rounded-lg p-6 hover:border-blue-500 transition-colors duration-200"
+                  className="cursor-pointer flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-500 transition-colors duration-200"
                 >
                   {previewUrl ? (
                     <img
@@ -505,6 +474,19 @@ const Profile = () => {
           </button>
         )}
 
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6">
+            <p>{error}</p>
+            <button 
+              onClick={() => fetchUserPosts()}
+              className="mt-2 text-sm font-medium underline"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
         {/* Tabs */}
         <div className="flex border-b mb-6">
           <button
@@ -532,97 +514,115 @@ const Profile = () => {
         {activeTab === 'posts' ? (
           <>
             {/* Posts List View */}
-            <div className="space-y-4 mb-8">
-              {posts.map((post) => (
-                <div key={post._id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-                  <div className="flex flex-col md:flex-row">
-                    <div className="md:w-1/3">
-                      {post.mediaType === 'image' ? (
-                        <img
-                          src={post.mediaUrl}
-                          alt={post.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <video
-                          src={post.mediaUrl}
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                    </div>
-                    <div className="p-4 md:w-2/3">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">{post.title}</h3>
-                        <span className={`text-xs font-medium px-2 py-1 rounded-full flex items-center ${getStatusColor(post.status)}`}>
-                          {getStatusIcon(post.status)}
-                          <span className="ml-1 capitalize">{post.status.replace('_', ' ')}</span>
-                        </span>
+            {userPosts.length > 0 ? (
+              <div className="space-y-4 mb-8">
+                {userPosts.map((post) => (
+                  <div key={post._id} className="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div className="flex flex-col md:flex-row">
+                      <div className="md:w-1/3">
+                        {post.mediaType === 'image' ? (
+                          <img
+                            src={post.mediaUrl}
+                            alt={post.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <video
+                            src={post.mediaUrl}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
                       </div>
-                      
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                          {post.category}
-                        </span>
-                        <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded flex items-center">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          {post.location}
-                        </span>
-                      </div>
-                      
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">{post.description}</p>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center text-gray-500 text-sm">
-                          <ThumbsUp className="h-4 w-4 mr-1" />
-                          <span>{post.votes.length} votes</span>
+                      <div className="p-4 md:w-2/3">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="text-lg font-semibold text-gray-900">{post.title}</h3>
+                          <span className={`text-xs font-medium px-2 py-1 rounded-full flex items-center ${getStatusColor(post.status)}`}>
+                            {getStatusIcon(post.status)}
+                            <span className="ml-1 capitalize">{post.status.replace('_', ' ')}</span>
+                          </span>
                         </div>
-                        <span className="text-xs text-gray-500">
-                          {new Date(post.createdAt).toLocaleDateString()}
-                        </span>
+                        
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {post.category && (
+                            <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                              {post.category}
+                            </span>
+                          )}
+                          {post.location && (
+                            <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded flex items-center">
+                              <MapPin className="h-3 w-3 mr-1" />
+                              {post.location}
+                            </span>
+                          )}
+                        </div>
+                        
+                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">{post.description}</p>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center text-gray-500 text-sm">
+                            <ThumbsUp className="h-4 w-4 mr-1" />
+                            <span>{post.votes.length} votes</span>
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {new Date(post.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-10">
+                <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900">No posts yet</h3>
+                <p className="text-gray-500 mt-2">Create your first post to get started</p>
+              </div>
+            )}
           </>
         ) : (
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
             
-            <div className="space-y-4">
-              {posts.map((post) => (
-                <div key={post._id} className="flex items-start space-x-3 pb-4 border-b border-gray-100">
-                  <div className={`p-2 rounded-full ${getStatusColor(post.status)}`}>
-                    {getStatusIcon(post.status)}
+            {userPosts.length > 0 ? (
+              <div className="space-y-4">
+                {userPosts.map((post) => (
+                  <div key={post._id} className="flex items-start space-x-3 pb-4 border-b border-gray-100">
+                    <div className={`p-2 rounded-full ${getStatusColor(post.status)}`}>
+                      {getStatusIcon(post.status)}
+                    </div>
+                    <div>
+                      <p className="text-gray-900">
+                        Your post <span className="font-medium">"{post.title}"</span> is now <span className="font-medium capitalize">{post.status.replace('_', ' ')}</span>
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(post.createdAt).toLocaleString()}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-gray-900">
-                      Your post <span className="font-medium">"{post.title}"</span> is now <span className="font-medium capitalize">{post.status.replace('_', ' ')}</span>
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(post.createdAt).toLocaleString()}
-                    </p>
+                ))}
+                
+                {userPosts.flatMap(post => post.votes.map((vote, index) => (
+                  <div key={`${post._id}-vote-${index}`} className="flex items-start space-x-3 pb-4 border-b border-gray-100">
+                    <div className="p-2 rounded-full bg-blue-100 text-blue-800">
+                      <ThumbsUp className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-gray-900">
+                        Someone voted on your post <span className="font-medium">"{post.title}"</span>
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(new Date(post.createdAt).getTime() + index * 86400000).toLocaleString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
-              
-              {posts.flatMap(post => post.votes.map((vote, index) => (
-                <div key={`${post._id}-vote-${index}`} className="flex items-start space-x-3 pb-4 border-b border-gray-100">
-                  <div className="p-2 rounded-full bg-blue-100 text-blue-800">
-                    <ThumbsUp className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-gray-900">
-                      Someone voted on your post <span className="font-medium">"{post.title}"</span>
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(new Date(post.createdAt).getTime() + index * 86400000).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              )))}
-            </div>
+                )))}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <p className="text-gray-500">No activity to show yet</p>
+              </div>
+            )}
           </div>
         )}
       </div>

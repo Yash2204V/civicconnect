@@ -7,26 +7,29 @@ import Login from './pages/Login';
 import Profile from './pages/Profile';
 import { motion } from 'framer-motion';
 import { AuthProvider } from './context/AuthContext';
+import { PostProvider } from './context/PostContext';
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Routes>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/admin-login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminPanel />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/" element={<Navigate to="/dashboard" />} />
-          </Routes>
-        </motion.div>
-      </Router>
+      <PostProvider>
+        <Router>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Routes>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/admin-login" element={<AdminLogin />} />
+              <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/" element={<Navigate to="/dashboard" />} />
+            </Routes>
+          </motion.div>
+        </Router>
+      </PostProvider>
     </AuthProvider>
   );
 }

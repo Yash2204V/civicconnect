@@ -1,37 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Clock, 
   CheckCircle, 
   AlertTriangle, 
-  ArrowLeft, 
   Search, 
   Filter, 
   MapPin,
   MessageCircle,
   Vote,
-  X
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-
-interface Post {
-  _id: string;
-  title: string;
-  description: string;
-  mediaUrl: string;
-  mediaType: 'image' | 'video';
-  status: 'posted' | 'waitlist' | 'in_progress' | 'completed';
-  votes: string[];
-  category: string;
-  location: string;
-  user: {
-    _id: string;
-    name: string;
-    email: string;
-  };
-  createdAt: string;
-  comments: Comment[];
-}
+import { useAuth } from '../context/AuthContext';
+import { usePosts } from '../context/PostContext';
 
 interface Comment {
   _id: string;
@@ -42,115 +23,6 @@ interface Comment {
   text: string;
   createdAt: string;
 }
-
-// Dummy posts data
-const dummyPosts: Post[] = [
-  {
-    _id: '1',
-    title: 'Broken Street Light on Main Street',
-    description: 'The street light near 123 Main Street has been out for weeks, creating a safety hazard for pedestrians at night.',
-    mediaUrl: 'https://images.unsplash.com/photo-1544984243-ec57ea16fe25?w=800&auto=format&fit=crop',
-    mediaType: 'image',
-    status: 'posted',
-    votes: ['1', '2', '3'],
-    category: 'Infrastructure & Public Services',
-    location: 'Main Street, Downtown',
-    user: { _id: '2', name: 'Sarah Johnson', email: 'sarah@example.com' },
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    comments: [
-      {
-        _id: 'c1',
-        user: { _id: '3', name: 'Mike Wilson' },
-        text: 'I noticed this too! It\'s been a problem for weeks.',
-        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
-      }
-    ]
-  },
-  {
-    _id: '2',
-    title: 'Pothole Damage on Oak Avenue',
-    description: 'Large pothole causing damage to vehicles. Multiple cars have already been affected. Urgent repair needed.',
-    mediaUrl: 'https://images.unsplash.com/photo-1592840062661-a5a7f78e2056?w=800&auto=format&fit=crop',
-    mediaType: 'image',
-    status: 'in_progress',
-    votes: ['1', '2', '3', '4', '5'],
-    category: 'Infrastructure & Public Services',
-    location: 'Oak Avenue, Westside',
-    user: { _id: '3', name: 'Mike Wilson', email: 'mike@example.com' },
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    comments: []
-  },
-  {
-    _id: '3',
-    title: 'Park Cleanup Needed',
-    description: 'Central Park has accumulated a lot of litter. We need community attention to maintain our green spaces.',
-    mediaUrl: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=800&auto=format&fit=crop',
-    mediaType: 'image',
-    status: 'waitlist',
-    votes: ['1', '2'],
-    category: 'Environmental Concerns',
-    location: 'Central Park',
-    user: { _id: '4', name: 'Emily Chen', email: 'emily@example.com' },
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    comments: []
-  },
-  {
-    _id: '4',
-    title: 'Graffiti on Historical Building',
-    description: 'Historical town hall has been vandalized with graffiti. This needs immediate attention to preserve our heritage.',
-    mediaUrl: 'https://images.unsplash.com/photo-1572010696997-c73e80a9620d?w=800&auto=format&fit=crop',
-    mediaType: 'image',
-    status: 'completed',
-    votes: ['1'],
-    category: 'Law & Order Issues',
-    location: 'Town Hall, City Center',
-    user: { _id: '5', name: 'Alex Thompson', email: 'alex@example.com' },
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    comments: []
-  },
-  {
-    _id: '5',
-    title: 'Flooding on River Street',
-    description: 'Poor drainage system causing regular flooding during rain. Businesses and residents are affected.',
-    mediaUrl: 'https://images.unsplash.com/photo-1547683905-f686c993aae5?w=800&auto=format&fit=crop',
-    mediaType: 'image',
-    status: 'in_progress',
-    votes: ['1', '2', '3', '4'],
-    category: 'Infrastructure & Public Services',
-    location: 'River Street, Eastside',
-    user: { _id: '6', name: 'Lisa Martinez', email: 'lisa@example.com' },
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    comments: []
-  },
-  {
-    _id: '6',
-    title: 'Homelessness Crisis Downtown',
-    description: 'Growing number of homeless individuals in the downtown area. Need for shelters and social services.',
-    mediaUrl: 'https://images.unsplash.com/photo-1518398046578-8cca57782e17?w=800&auto=format&fit=crop',
-    mediaType: 'image',
-    status: 'posted',
-    votes: ['1', '2', '3', '4', '5', '6'],
-    category: 'Social Issues',
-    location: 'Downtown Area',
-    user: { _id: '7', name: 'David Rodriguez', email: 'david@example.com' },
-    createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-    comments: []
-  },
-  {
-    _id: '7',
-    title: 'Lack of Affordable Housing',
-    description: 'Rising rent prices are forcing families out of the neighborhood. Need for affordable housing initiatives.',
-    mediaUrl: 'https://images.unsplash.com/photo-1460317442991-0ec209397118?w=800&auto=format&fit=crop',
-    mediaType: 'image',
-    status: 'waitlist',
-    votes: ['1', '2', '3'],
-    category: 'Housing & Urban Development',
-    location: 'Citywide',
-    user: { _id: '8', name: 'Jennifer Lee', email: 'jennifer@example.com' },
-    createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-    comments: []
-  }
-];
 
 const categories = [
   'All Categories',
@@ -166,15 +38,17 @@ const categories = [
 ];
 
 const AdminPanel = () => {
-  const [posts, setPosts] = useState<Post[]>(dummyPosts);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { posts, loading, error, fetchPosts, addComment, updatePostStatus } = usePosts();
+  
   const [filter, setFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const [commentText, setCommentText] = useState<{[key: string]: string}>({});
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [selectedPost, setSelectedPost] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const navigate = useNavigate();
 
   // Check if admin is authenticated
   useEffect(() => {
@@ -184,11 +58,14 @@ const AdminPanel = () => {
     }
   }, [navigate]);
 
-  const updateStatus = async (postId: string, status: Post['status']) => {
+  // Fetch posts when component mounts
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const handleUpdateStatus = async (postId: string, status: 'posted' | 'waitlist' | 'in_progress' | 'completed') => {
     try {
-      setPosts(posts.map(post => 
-        post._id === postId ? { ...post, status } : post
-      ));
+      await updatePostStatus(postId, status);
       
       if (selectedPost && selectedPost._id === postId) {
         setSelectedPost({...selectedPost, status});
@@ -198,34 +75,15 @@ const AdminPanel = () => {
     }
   };
 
-  const handleAddComment = (postId: string) => {
+  const handleAddComment = async (postId: string) => {
     if (!commentText[postId]?.trim()) return;
     
-    const newComment = {
-      _id: `comment-${Date.now()}`,
-      user: { _id: 'admin', name: 'Admin' },
-      text: commentText[postId],
-      createdAt: new Date().toISOString()
-    };
-    
-    setPosts(posts.map(post => {
-      if (post._id === postId) {
-        return {
-          ...post,
-          comments: [...post.comments, newComment]
-        };
-      }
-      return post;
-    }));
-    
-    if (selectedPost && selectedPost._id === postId) {
-      setSelectedPost({
-        ...selectedPost,
-        comments: [...selectedPost.comments, newComment]
-      });
+    try {
+      await addComment(postId, commentText[postId]);
+      setCommentText({...commentText, [postId]: ''});
+    } catch (error) {
+      console.error('Error adding comment:', error);
     }
-    
-    setCommentText({...commentText, [postId]: ''});
   };
 
   const handleLogout = () => {
@@ -241,10 +99,10 @@ const AdminPanel = () => {
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       post.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       post.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.location.toLowerCase().includes(searchTerm.toLowerCase())
+      post.location?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-  const getStatusColor = (status: Post['status']) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'posted':
         return 'bg-yellow-100 text-yellow-800';
@@ -259,7 +117,7 @@ const AdminPanel = () => {
     }
   };
 
-  const getStatusIcon = (status: Post['status']) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
       case 'posted':
         return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
@@ -403,198 +261,233 @@ const AdminPanel = () => {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-12">
+            <svg className="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6">
+            <p>{error}</p>
+            <button 
+              onClick={() => fetchPosts()}
+              className="mt-2 text-sm font-medium underline"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
         {/* Issues List */}
         <div className="grid grid-cols-1 gap-6">
-          {filteredPosts.map((post) => (
-            <motion.div 
-              key={post._id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-              className="bg-white rounded-lg shadow-md overflow-hidden"
-            >
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900">{post.title}</h2>
-                    <div className="flex items-center mt-1">
-                      <img
-                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${post.user.name}`}
-                        alt={post.user.name}
-                        className="h-5 w-5 rounded-full mr-2"
-                      />
-                      <p className="text-sm text-gray-500">
-                        Posted by {post.user.name} ({post.user.email})
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(post.status)}`}>
-                      {getStatusIcon(post.status)}
-                      <span className="ml-1 capitalize">{post.status.replace('_', ' ')}</span>
-                    </span>
-                    <span className="text-sm font-medium">
-                      {post.votes.length} votes
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                    {post.category}
-                  </span>
-                  <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded flex items-center">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    {post.location}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {new Date(post.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <p className="text-gray-700 mb-4">{post.description}</p>
-
-                    {post.mediaType === 'image' ? (
-                      <img
-                        src={post.mediaUrl}
-                        alt={post.title}
-                        className="w-full h-64 object-cover rounded-lg mb-4"
-                      />
-                    ) : (
-                      <video
-                        src={post.mediaUrl}
-                        controls
-                        className="w-full h-64 object-cover rounded-lg mb-4"
-                      />
-                    )}
-                  </div>
-
-                  <div>
-                    {/* Status Update Buttons */}
-                    <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                      <h3 className="text-sm font-medium text-gray-900 mb-3">Update Status</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => updateStatus(post._id, 'waitlist')}
-                          className={`flex items-center justify-center px-4 py-2 rounded ${
-                            post.status === 'waitlist'
-                              ? 'bg-yellow-100 text-yellow-700 border-2 border-yellow-300'
-                              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                          }`}
-                        >
-                          <AlertTriangle className="w-5 h-5 mr-2" />
-                          Waitlist
-                        </button>
-                        <button
-                          onClick={() => updateStatus(post._id, 'in_progress')}
-                          className={`flex items-center justify-center px-4 py-2 rounded ${
-                            post.status === 'in_progress'
-                              ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
-                              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                          }`}
-                        >
-                          <Clock className="w-5 h-5 mr-2" />
-                          In Progress
-                        </button>
-                        <button
-                          onClick={() => updateStatus(post._id, 'completed')}
-                          className={`flex items-center justify-center px-4 py-2 rounded ${
-                            post.status === 'completed'
-                              ? 'bg-green-100 text-green-700 border-2 border-green-300'
-                              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                          }`}
-                        >
-                          <CheckCircle className="w-5 h-5 mr-2" />
-                          Completed
-                        </button>
-                        <button
-                          onClick={() => updateStatus(post._id, 'posted')}
-                          className={`flex items-center justify-center px-4 py-2 rounded ${
-                            post.status === 'posted'
-                              ? 'bg-red-100 text-red-700 border-2 border-red-300'
-                              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                          }`}
-                        >
-                          <AlertTriangle className="w-5 h-5 mr-2" />
-                          Reset
-                        </button>
+          {!loading && filteredPosts.length > 0 ? (
+            filteredPosts.map((post) => (
+              <motion.div 
+                key={post._id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white rounded-lg shadow-md overflow-hidden"
+              >
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-900">{post.title}</h2>
+                      <div className="flex items-center mt-1">
+                        <img
+                          src={`https://api.dicebear.com/7.x/initials/svg?seed=${post.user.name}`}
+                          alt={post.user.name}
+                          className="h-5 w-5 rounded-full mr-2"
+                        />
+                        <p className="text-sm text-gray-500">
+                          Posted by {post.user.name} ({post.user.email})
+                        </p>
                       </div>
                     </div>
+                    <div className="flex items-center space-x-2">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(post.status)}`}>
+                        {getStatusIcon(post.status)}
+                        <span className="ml-1 capitalize">{post.status.replace('_', ' ')}</span>
+                      </span>
+                      <span className="text-sm font-medium">
+                        {post.votes.length} votes
+                      </span>
+                    </div>
+                  </div>
 
-                    {/* Comments Section */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {post.category && (
+                      <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                        {post.category}
+                      </span>
+                    )}
+                    {post.location && (
+                      <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded flex items-center">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        {post.location}
+                      </span>
+                    )}
+                    <span className="text-xs text-gray-500">
+                      {new Date(post.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <button
-                        onClick={() => setExpandedPost(expandedPost === post._id ? null : post._id)}
-                        className="text-blue-500 hover:text-blue-700 text-sm font-medium mb-4 flex items-center"
-                      >
-                        <MessageCircle className="w-4 h-4 mr-1" />
-                        {expandedPost === post._id ? 'Hide Comments' : `Show Comments (${post.comments.length})`}
-                      </button>
-                      
-                      {expandedPost === post._id && (
-                        <div className="mb-4 border-t border-gray-100 pt-4">
-                          {post.comments.length > 0 ? (
-                            <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
-                              {post.comments.map((comment) => (
-                                <div key={comment._id} className="flex space-x-3">
-                                  <img
-                                    src={`https://api.dicebear.com/7.x/initials/svg?seed=${comment.user.name}`}
-                                    alt={comment.user.name}
-                                    className="h-8 w-8 rounded-full"
-                                  />
-                                  <div className="flex-1">
-                                    <div className="bg-gray-50 p-3 rounded-lg">
-                                      <p className="font-medium text-sm text-gray-900">{comment.user.name}</p>
-                                      <p className="text-gray-700 text-sm">{comment.text}</p>
+                      <p className="text-gray-700 mb-4">{post.description}</p>
+
+                      {post.mediaType === 'image' ? (
+                        <img
+                          src={post.mediaUrl}
+                          alt={post.title}
+                          className="w-full h-64 object-cover rounded-lg mb-4"
+                        />
+                      ) : (
+                        <video
+                          src={post.mediaUrl}
+                          controls
+                          className="w-full h-64 object-cover rounded-lg mb-4"
+                        />
+                      )}
+                    </div>
+
+                    <div>
+                      {/* Status Update Buttons */}
+                      <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                        <h3 className="text-sm font-medium text-gray-900 mb-3">Update Status</h3>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={() => handleUpdateStatus(post._id, 'waitlist')}
+                            className={`flex items-center justify-center px-4 py-2 rounded ${
+                              post.status === 'waitlist'
+                                ? 'bg-yellow-100 text-yellow-700 border-2 border-yellow-300'
+                                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                            }`}
+                          >
+                            <AlertTriangle className="w-5 h-5 mr-2" />
+                            Waitlist
+                          </button>
+                          <button
+                            onClick={() => handleUpdateStatus(post._id, 'in_progress')}
+                            className={`flex items-center justify-center px-4 py-2 rounded ${
+                              post.status === 'in_progress'
+                                ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
+                                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                            }`}
+                          >
+                            <Clock className="w-5 h-5 mr-2" />
+                            In Progress
+                          </button>
+                          <button
+                            onClick={() => handleUpdateStatus(post._id, 'completed')}
+                            className={`flex items-center justify-center px-4 py-2 rounded ${
+                              post.status === 'completed'
+                                ? 'bg-green-100 text-green-700 border-2 border-green-300'
+                                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                            }`}
+                          >
+                            <CheckCircle className="w-5 h-5 mr-2" />
+                            Completed
+                          </button>
+                          <button
+                            onClick={() => handleUpdateStatus(post._id, 'posted')}
+                            className={`flex items-center justify-center px-4 py-2 rounded ${
+                              post.status === 'posted'
+                                ? 'bg-red-100 text-red-700 border-2 border-red-300'
+                                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                            }`}
+                          >
+                            <AlertTriangle className="w-5 h-5 mr-2" />
+                            Reset
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Comments Section */}
+                      <div>
+                        <button
+                          onClick={() => setExpandedPost(expandedPost === post._id ? null : post._id)}
+                          className="text-blue-500 hover:text-blue-700 text-sm font-medium mb-4 flex items-center"
+                        >
+                          <MessageCircle className="w-4 h-4 mr-1" />
+                          {expandedPost === post._id ? 'Hide Comments' : `Show Comments (${post.comments?.length || 0})`}
+                        </button>
+                        
+                        {expandedPost === post._id && (
+                          <div className="mb-4 border-t border-gray-100 pt-4">
+                            {post.comments && post.comments.length > 0 ? (
+                              <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
+                                {post.comments.map((comment: Comment) => (
+                                  <div key={comment._id} className="flex space-x-3">
+                                    <img
+                                      src={`https://api.dicebear.com/7.x/initials/svg?seed=${comment.user.name}`}
+                                      alt={comment.user.name}
+                                      className="h-8 w-8 rounded-full"
+                                    />
+                                    <div className="flex-1">
+                                      <div className="bg-gray-50 p-3 rounded-lg">
+                                        <p className="font-medium text-sm text-gray-900">{comment.user.name}</p>
+                                        <p className="text-gray-700 text-sm">{comment.text}</p>
+                                      </div>
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        {new Date(comment.createdAt).toLocaleString()}
+                                      </p>
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                      {new Date(comment.createdAt).toLocaleString()}
-                                    </p>
                                   </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-gray-500 text-sm mb-3">No comments yet.</p>
-                          )}
-                          
-                          <div className="flex space-x-3">
-                            <img
-                              src="https://api.dicebear.com/7.x/initials/svg?seed=Admin"
-                              alt="Admin"
-                              className="h-8 w-8 rounded-full"
-                            />
-                            <div className="flex-1 flex">
-                              <input
-                                type="text"
-                                value={commentText[post._id] || ''}
-                                onChange={(e) => setCommentText({...commentText, [post._id]: e.target.value})}
-                                placeholder="Add an admin comment..."
-                                className="flex-1 bg-gray-50 border border-gray-200 rounded-l-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                onKeyPress={(e) => {
-                                  if (e.key === 'Enter') {
-                                    handleAddComment(post._id);
-                                  }
-                                }}
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-gray-500 text-sm mb-3">No comments yet.</p>
+                            )}
+                            
+                            <div className="flex space-x-3">
+                              <img
+                                src="https://api.dicebear.com/7.x/initials/svg?seed=Admin"
+                                alt="Admin"
+                                className="h-8 w-8 rounded-full"
                               />
-                              <button
-                                onClick={() => handleAddComment(post._id)}
-                                className="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 transition-colors duration-200"
-                              >
-                                Comment
-                              </button>
+                              <div className="flex-1 flex">
+                                <input
+                                  type="text"
+                                  value={commentText[post._id] || ''}
+                                  onChange={(e) => setCommentText({...commentText, [post._id]: e.target.value})}
+                                  placeholder="Add an admin comment..."
+                                  className="flex-1 bg-gray-50 border border-gray-200 rounded-l-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  onKeyPress={(e) => {
+                                    if (e.key === 'Enter') {
+                                      handleAddComment(post._id);
+                                    }
+                                  }}
+                                />
+                                <button
+                                  onClick={() => handleAddComment(post._id)}
+                                  className="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 transition-colors duration-200"
+                                >
+                                  Comment
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))
+          ) : !loading && (
+            <div className="text-center py-10">
+              <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900">No issues found</h3>
+              <p className="text-gray-500 mt-2">Try adjusting your search or filter criteria</p>
+            </div>
+          )}
         </div>
       </main>
     </div>

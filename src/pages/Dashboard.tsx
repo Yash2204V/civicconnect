@@ -16,6 +16,17 @@ import {
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { usePosts } from '../context/PostContext';
+
+interface Comment {
+  _id: string;
+  user: {
+    _id: string;
+    name: string;
+  };
+  text: string;
+  createdAt: string;
+}
 
 interface Post {
   _id: string;
@@ -35,125 +46,6 @@ interface Post {
   comments: Comment[];
 }
 
-interface Comment {
-  _id: string;
-  user: {
-    _id: string;
-    name: string;
-  };
-  text: string;
-  createdAt: string;
-}
-
-// Dummy posts data
-const dummyPosts: Post[] = [
-  {
-    _id: '1',
-    title: 'Broken Street Light on Main Street',
-    description: 'The street light near 123 Main Street has been out for weeks, creating a safety hazard for pedestrians at night.',
-    mediaUrl: 'https://images.unsplash.com/photo-1544984243-ec57ea16fe25?w=800&auto=format&fit=crop',
-    mediaType: 'image',
-    status: 'posted',
-    votes: ['1', '2', '3'],
-    category: 'Infrastructure & Public Services',
-    location: 'Main Street, Downtown',
-    user: { _id: '2', name: 'Sarah Johnson' },
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    comments: [
-      {
-        _id: 'c1',
-        user: { _id: '3', name: 'Mike Wilson' },
-        text: 'I noticed this too! It\'s been a problem for weeks.',
-        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
-      }
-    ]
-  },
-  {
-    _id: '2',
-    title: 'Pothole Damage on Oak Avenue',
-    description: 'Large pothole causing damage to vehicles. Multiple cars have already been affected. Urgent repair needed.',
-    mediaUrl: 'https://images.unsplash.com/photo-1592840062661-a5a7f78e2056?w=800&auto=format&fit=crop',
-    mediaType: 'image',
-    status: 'in_progress',
-    votes: ['1', '2', '3', '4', '5'],
-    category: 'Infrastructure & Public Services',
-    location: 'Oak Avenue, Westside',
-    user: { _id: '3', name: 'Mike Wilson' },
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    comments: []
-  },
-  {
-    _id: '3',
-    title: 'Park Cleanup Needed',
-    description: 'Central Park has accumulated a lot of litter. We need community attention to maintain our green spaces.',
-    mediaUrl: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=800&auto=format&fit=crop',
-    mediaType: 'image',
-    status: 'waitlist',
-    votes: ['1', '2'],
-    category: 'Environmental Concerns',
-    location: 'Central Park',
-    user: { _id: '4', name: 'Emily Chen' },
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    comments: []
-  },
-  {
-    _id: '4',
-    title: 'Graffiti on Historical Building',
-    description: 'Historical town hall has been vandalized with graffiti. This needs immediate attention to preserve our heritage.',
-    mediaUrl: 'https://images.unsplash.com/photo-1572010696997-c73e80a9620d?w=800&auto=format&fit=crop',
-    mediaType: 'image',
-    status: 'completed',
-    votes: ['1'],
-    category: 'Law & Order Issues',
-    location: 'Town Hall, City Center',
-    user: { _id: '5', name: 'Alex Thompson' },
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    comments: []
-  },
-  {
-    _id: '5',
-    title: 'Flooding on River Street',
-    description: 'Poor drainage system causing regular flooding during rain. Businesses and residents are affected.',
-    mediaUrl: 'https://images.unsplash.com/photo-1547683905-f686c993aae5?w=800&auto=format&fit=crop',
-    mediaType: 'image',
-    status: 'in_progress',
-    votes: ['1', '2', '3', '4'],
-    category: 'Infrastructure & Public Services',
-    location: 'River Street, Eastside',
-    user: { _id: '6', name: 'Lisa Martinez' },
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    comments: []
-  },
-  {
-    _id: '6',
-    title: 'Homelessness Crisis Downtown',
-    description: 'Growing number of homeless individuals in the downtown area. Need for shelters and social services.',
-    mediaUrl: 'https://images.unsplash.com/photo-1518398046578-8cca57782e17?w=800&auto=format&fit=crop',
-    mediaType: 'image',
-    status: 'posted',
-    votes: ['1', '2', '3', '4', '5', '6'],
-    category: 'Social Issues',
-    location: 'Downtown Area',
-    user: { _id: '7', name: 'David Rodriguez' },
-    createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-    comments: []
-  },
-  {
-    _id: '7',
-    title: 'Lack of Affordable Housing',
-    description: 'Rising rent prices are forcing families out of the neighborhood. Need for affordable housing initiatives.',
-    mediaUrl: 'https://images.unsplash.com/photo-1460317442991-0ec209397118?w=800&auto=format&fit=crop',
-    mediaType: 'image',
-    status: 'waitlist',
-    votes: ['1', '2', '3'],
-    category: 'Housing & Urban Development',
-    location: 'Citywide',
-    user: { _id: '8', name: 'Jennifer Lee' },
-    createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-    comments: []
-  }
-];
-
 const categories = [
   'Infrastructure & Public Services',
   'Environmental Concerns',
@@ -168,8 +60,7 @@ const categories = [
 
 const Dashboard = () => {
   const { user, isAuthenticated } = useAuth();
-  const [posts, setPosts] = useState<Post[]>(dummyPosts);
-  const [loading, setLoading] = useState(false);
+  const { posts, addPost, votePost, addComment } = usePosts();
   const [filter, setFilter] = useState('all');
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const [commentText, setCommentText] = useState<{[key: string]: string}>({});
@@ -196,8 +87,13 @@ const Dashboard = () => {
         },
         (error) => {
           console.error("Error getting location:", error);
+          // Set a default location if geolocation fails
+          setLocation("Unknown location");
         }
       );
+    } else {
+      // Geolocation not supported by browser
+      setLocation("Unknown location");
     }
   }, []);
 
@@ -209,33 +105,12 @@ const Dashboard = () => {
   }, [user]);
 
   const handleVote = async (postId: string) => {
-    // Find the post
-    const post = posts.find(p => p._id === postId);
-    if (!post) return;
-
-    // Check if user already voted
-    const hasVoted = post.votes.includes(userId);
-    
     // Set animation for the voted post
     setVoteAnimation(postId);
     setTimeout(() => setVoteAnimation(null), 1000);
 
-    // Update votes
-    setPosts(posts.map(post => {
-      if (post._id === postId) {
-        return {
-          ...post,
-          votes: hasVoted
-            ? post.votes.filter(id => id !== userId)
-            : [...post.votes, userId]
-        };
-      }
-      return post;
-    }));
-
-    // In a real app, this would save to the database (MONGO_VOTE)
-    // Example API call:
-    // await axios.post('/api/votes', { postId, userId, action: hasVoted ? 'remove' : 'add' });
+    // Call the votePost function from context
+    await votePost(postId);
   };
 
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -258,24 +133,19 @@ const Dashboard = () => {
 
     setUploading(true);
     try {
-      // In a real app, this would upload to the server
-      // For now, we'll simulate adding a new post to our local state
-      const newPost: Post = {
-        _id: `new-${Date.now()}`,
+      // Create a new post using the context function
+      await addPost({
         title,
         description,
         mediaUrl: previewUrl || 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&auto=format&fit=crop', // Default image if none provided
         mediaType: 'image',
         status: 'posted',
-        votes: [],
         category,
         location: location || 'Unknown location',
-        user: { _id: userId, name: userName },
-        createdAt: new Date().toISOString(),
-        comments: []
-      };
+        user: { _id: userId, name: userName }
+      });
 
-      setPosts([newPost, ...posts]);
+      // Reset form
       setTitle('');
       setDescription('');
       setMedia(null);
@@ -297,28 +167,11 @@ const Dashboard = () => {
       return;
     }
     
-    const newComment = {
-      _id: `comment-${Date.now()}`,
-      user: { _id: userId, name: userName },
-      text: commentText[postId],
-      createdAt: new Date().toISOString()
-    };
+    // Add comment using the context function
+    addComment(postId, commentText[postId]);
     
-    setPosts(posts.map(post => {
-      if (post._id === postId) {
-        return {
-          ...post,
-          comments: [...post.comments, newComment]
-        };
-      }
-      return post;
-    }));
-    
+    // Clear comment text
     setCommentText({...commentText, [postId]: ''});
-    
-    // In a real app, this would save to the database (MONGO_COMMENT)
-    // Example API call:
-    // await axios.post('/api/comments', { postId, userId, text: commentText[postId] });
   };
 
   const handleShare = (postId: string) => {
@@ -505,8 +358,11 @@ const Dashboard = () => {
                           },
                           (error) => {
                             console.error("Error getting location:", error);
+                            setLocation("Unknown location");
                           }
                         );
+                      } else {
+                        setLocation("Unknown location");
                       }
                     }}
                   >
@@ -675,7 +531,7 @@ const Dashboard = () => {
                       onClick={() => setExpandedPost(expandedPost === post._id ? null : post._id)}
                     >
                       <MessageCircle className="h-6 w-6" />
-                      <span>{post.comments.length}</span>
+                      <span>{post.comments ? post.comments.length : 0}</span>
                     </button>
                     <button 
                       className="text-gray-600"
@@ -708,7 +564,7 @@ const Dashboard = () => {
                     >
                       <h3 className="font-medium text-gray-900 mb-3">Comments</h3>
                       
-                      {post.comments.length > 0 ? (
+                      {post.comments && post.comments.length > 0 ? (
                         <div className="space-y-4 mb-4">
                           {post.comments.map((comment) => (
                             <div key={comment._id} className="flex space-x-3">
