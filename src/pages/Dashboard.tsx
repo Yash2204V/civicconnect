@@ -60,7 +60,7 @@ const categories = [
 
 const Dashboard = () => {
   const { user, isAuthenticated } = useAuth();
-  const { posts, addPost, votePost, addComment } = usePosts();
+  const { posts, loading, error, fetchPosts, addComment, votePost, createPost } = usePosts();
   const [filter, setFilter] = useState('all');
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const [commentText, setCommentText] = useState<{[key: string]: string}>({});
@@ -104,6 +104,11 @@ const Dashboard = () => {
     }
   }, [user]);
 
+  // Fetch posts when component mounts
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
   const handleVote = async (postId: string) => {
     // Set animation for the voted post
     setVoteAnimation(postId);
@@ -134,15 +139,13 @@ const Dashboard = () => {
     setUploading(true);
     try {
       // Create a new post using the context function
-      await addPost({
+      await createPost({
         title,
         description,
         mediaUrl: previewUrl || 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&auto=format&fit=crop', // Default image if none provided
         mediaType: 'image',
-        status: 'posted',
         category,
-        location: location || 'Unknown location',
-        user: { _id: userId, name: userName }
+        location: location || 'Unknown location'
       });
 
       // Reset form
@@ -152,6 +155,9 @@ const Dashboard = () => {
       setPreviewUrl(null);
       setCategory('');
       setShowNewPost(false);
+      
+      // Refresh posts to show the newly created post
+      fetchPosts();
     } catch (error) {
       console.error('Error creating post:', error);
     } finally {
@@ -217,8 +223,8 @@ const Dashboard = () => {
       searchTerm === '' || 
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       post.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.location.toLowerCase().includes(searchTerm.toLowerCase())
+      (post.category && post.category.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (post.location && post.location.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
   return (
@@ -458,9 +464,32 @@ const Dashboard = () => {
           </motion.div>
         )}
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-12">
+            <svg className="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6">
+            <p>{error}</p>
+            <button 
+              onClick={() => fetchPosts()}
+              className="mt-2 text-sm font-medium underline"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
         {/* Posts Grid */}
         <div className="space-y-6">
-          {filteredPosts.length > 0 ? (
+          {!loading && filteredPosts.length > 0 ? (
             filteredPosts.map((post) => (
               <motion.div 
                 key={post._id} 
@@ -545,13 +574,17 @@ const Dashboard = () => {
                   <p className="text-gray-700 mb-2">{post.description}</p>
                   
                   <div className="flex flex-wrap gap-2 mb-3">
-                    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                      {post.category}
-                    </span>
-                    <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded flex items-center">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {post.location}
-                    </span>
+                    {post.category && (
+                      <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                        {post.category}
+                      </span>
+                    )}
+                    {post.location && (
+                      <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded flex items-center">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        {post.location}
+                      </span>
+                    )}
                   </div>
                   
                   {/* Comments Section */}
@@ -624,7 +657,7 @@ const Dashboard = () => {
                 </div>
               </motion.div>
             ))
-          ) : (
+          ) : !loading && (
             <div className="text-center py-10">
               <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900">No issues found</h3>

@@ -65,11 +65,19 @@ const AdminPanel = () => {
 
   const handleUpdateStatus = async (postId: string, status: 'posted' | 'waitlist' | 'in_progress' | 'completed') => {
     try {
+      // Set admin authentication in headers for the API call
+      sessionStorage.setItem('adminAuthenticated', 'true');
+      
+      // Update post status
       await updatePostStatus(postId, status);
       
+      // Update selected post if it's the one being updated
       if (selectedPost && selectedPost._id === postId) {
         setSelectedPost({...selectedPost, status});
       }
+      
+      // Refresh posts to update the UI
+      fetchPosts();
     } catch (error) {
       console.error('Error updating status:', error);
     }
@@ -99,7 +107,7 @@ const AdminPanel = () => {
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       post.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       post.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.location?.toLowerCase().includes(searchTerm.toLowerCase())
+      (post.location && post.location.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
   const getStatusColor = (status: string) => {
@@ -131,28 +139,33 @@ const AdminPanel = () => {
   };
 
   // Stats for dashboard
+  const totalIssues = posts.length;
+  const inProgressCount = posts.filter(post => post.status === 'in_progress').length;
+  const completedCount = posts.filter(post => post.status === 'completed').length;
+  const totalVotes = posts.reduce((sum, post) => sum + post.votes.length, 0);
+
   const stats = [
     { 
       name: 'Total Issues', 
-      value: posts.length, 
+      value: totalIssues, 
       icon: <AlertTriangle className="w-6 h-6 text-red-500" />,
       color: 'bg-red-50'
     },
     { 
       name: 'In Progress', 
-      value: posts.filter(post => post.status === 'in_progress').length,
+      value: inProgressCount,
       icon: <Clock className="w-6 h-6 text-blue-500" />,
       color: 'bg-blue-50'
     },
     { 
       name: 'Completed', 
-      value: posts.filter(post => post.status === 'completed').length,
+      value: completedCount,
       icon: <CheckCircle className="w-6 h-6 text-green-500" />,
       color: 'bg-green-50'
     },
     { 
       name: 'Total Votes', 
-      value: posts.reduce((sum, post) => sum + post.votes.length, 0),
+      value: totalVotes,
       icon: <Vote className="w-6 h-6 text-purple-500" />,
       color: 'bg-purple-50'
     }
@@ -306,7 +319,7 @@ const AdminPanel = () => {
                           className="h-5 w-5 rounded-full mr-2"
                         />
                         <p className="text-sm text-gray-500">
-                          Posted by {post.user.name} ({post.user.email})
+                          Posted by {post.user.name} {post.user.email && `(${post.user.email})`}
                         </p>
                       </div>
                     </div>

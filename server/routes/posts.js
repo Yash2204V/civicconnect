@@ -11,7 +11,17 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const posts = await Post.find().sort({ createdAt: -1 }).populate('user', 'name email');
-    res.json(posts);
+    
+    // Get comments for each post
+    const postsWithComments = await Promise.all(posts.map(async (post) => {
+      const comments = await Comment.find({ post: post._id }).populate('user', 'name');
+      return {
+        ...post.toObject(),
+        comments: comments
+      };
+    }));
+    
+    res.json(postsWithComments);
   } catch (error) {
     console.error('Error fetching posts:', error);
     res.status(500).json({ message: 'Server error' });
@@ -25,7 +35,14 @@ router.get('/:id', async (req, res) => {
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    res.json(post);
+    
+    // Get comments for the post
+    const comments = await Comment.find({ post: post._id }).populate('user', 'name');
+    
+    res.json({
+      ...post.toObject(),
+      comments
+    });
   } catch (error) {
     console.error('Error fetching post:', error);
     res.status(500).json({ message: 'Server error' });
@@ -48,7 +65,14 @@ router.post('/', auth, async (req, res) => {
     });
     
     await newPost.save();
-    res.status(201).json(newPost);
+    
+    // Return the post with user info and empty comments array
+    const populatedPost = await Post.findById(newPost._id).populate('user', 'name email');
+    
+    res.status(201).json({
+      ...populatedPost.toObject(),
+      comments: []
+    });
   } catch (error) {
     console.error('Error creating post:', error);
     res.status(500).json({ message: 'Server error' });
@@ -68,13 +92,19 @@ router.patch('/:id/status', adminAuth, async (req, res) => {
       req.params.id,
       { status },
       { new: true }
-    );
+    ).populate('user', 'name email');
     
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
     
-    res.json(post);
+    // Get comments for the post
+    const comments = await Comment.find({ post: post._id }).populate('user', 'name');
+    
+    res.json({
+      ...post.toObject(),
+      comments
+    });
   } catch (error) {
     console.error('Error updating post status:', error);
     res.status(500).json({ message: 'Server error' });
@@ -113,7 +143,17 @@ router.post('/:id/vote', auth, async (req, res) => {
     }
     
     await post.save();
-    res.json(post);
+    
+    // Get the updated post with user info
+    const updatedPost = await Post.findById(post._id).populate('user', 'name email');
+    
+    // Get comments for the post
+    const comments = await Comment.find({ post: post._id }).populate('user', 'name');
+    
+    res.json({
+      ...updatedPost.toObject(),
+      comments
+    });
   } catch (error) {
     console.error('Error voting on post:', error);
     res.status(500).json({ message: 'Server error' });
@@ -158,7 +198,17 @@ router.post('/:id/comment', auth, async (req, res) => {
 router.get('/user/me', auth, async (req, res) => {
   try {
     const posts = await Post.find({ user: req.user.userId }).sort({ createdAt: -1 });
-    res.json(posts);
+    
+    // Get comments for each post
+    const postsWithComments = await Promise.all(posts.map(async (post) => {
+      const comments = await Comment.find({ post: post._id }).populate('user', 'name');
+      return {
+        ...post.toObject(),
+        comments: comments
+      };
+    }));
+    
+    res.json(postsWithComments);
   } catch (error) {
     console.error('Error fetching user posts:', error);
     res.status(500).json({ message: 'Server error' });
