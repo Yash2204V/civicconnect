@@ -23,6 +23,14 @@ const postSchema = new mongoose.Schema({
     enum: ['image', 'video'],
     required: true
   },
+  category: {
+    type: String,
+    required: true
+  },
+  location: {
+    type: String,
+    required: true
+  },
   status: {
     type: String,
     enum: ['posted', 'waitlist', 'in_progress', 'completed'],
