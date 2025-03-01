@@ -61,7 +61,8 @@ router.post('/', auth, async (req, res) => {
       mediaUrl,
       mediaType,
       category,
-      location
+      location,
+      status: 'posted' // Default status
     });
     
     await newPost.save();
@@ -75,7 +76,7 @@ router.post('/', auth, async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating post:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
@@ -107,7 +108,7 @@ router.patch('/:id/status', adminAuth, async (req, res) => {
     });
   } catch (error) {
     console.error('Error updating post status:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

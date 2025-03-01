@@ -14,6 +14,18 @@ export const auth = async (req, res, next) => {
       return res.status(401).json({ message: 'Invalid authentication' });
     }
 
+    // For demo user
+    if (userId === 'demo-user-id') {
+      req.user = { userId: 'demo-user-id', role: 'user' };
+      return next();
+    }
+
+    // For admin user
+    if (userId === 'admin-user-id') {
+      req.user = { userId: 'admin-user-id', role: 'admin' };
+      return next();
+    }
+
     // Find user in database
     const user = await User.findById(userId);
     if (!user) {
@@ -40,6 +52,12 @@ export const adminAuth = async (req, res, next) => {
     
     if (!userId) {
       return res.status(401).json({ message: 'Invalid authentication' });
+    }
+
+    // For admin demo user
+    if (userId === 'admin-user-id') {
+      req.user = { userId: 'admin-user-id', role: 'admin' };
+      return next();
     }
 
     // Find user in database

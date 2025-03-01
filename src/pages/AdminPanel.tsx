@@ -49,6 +49,7 @@ const AdminPanel = () => {
   const [commentText, setCommentText] = useState<{[key: string]: string}>({});
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [statusUpdateLoading, setStatusUpdateLoading] = useState<string | null>(null);
 
   // Check if admin is authenticated
   useEffect(() => {
@@ -65,8 +66,7 @@ const AdminPanel = () => {
 
   const handleUpdateStatus = async (postId: string, status: 'posted' | 'waitlist' | 'in_progress' | 'completed') => {
     try {
-      // Set admin authentication in headers for the API call
-      sessionStorage.setItem('adminAuthenticated', 'true');
+      setStatusUpdateLoading(postId);
       
       // Update post status
       await updatePostStatus(postId, status);
@@ -77,9 +77,12 @@ const AdminPanel = () => {
       }
       
       // Refresh posts to update the UI
-      fetchPosts();
+      await fetchPosts();
     } catch (error) {
       console.error('Error updating status:', error);
+      alert('Failed to update status. Please try again.');
+    } finally {
+      setStatusUpdateLoading(null);
     }
   };
 
@@ -377,46 +380,78 @@ const AdminPanel = () => {
                         <div className="grid grid-cols-2 gap-2">
                           <button
                             onClick={() => handleUpdateStatus(post._id, 'waitlist')}
+                            disabled={statusUpdateLoading === post._id}
                             className={`flex items-center justify-center px-4 py-2 rounded ${
                               post.status === 'waitlist'
                                 ? 'bg-yellow-100 text-yellow-700 border-2 border-yellow-300'
                                 : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                            }`}
+                            } ${statusUpdateLoading === post._id ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
-                            <AlertTriangle className="w-5 h-5 mr-2" />
+                            {statusUpdateLoading === post._id ? (
+                              <svg className="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            ) : (
+                              <AlertTriangle className="w-5 h-5 mr-2" />
+                            )}
                             Waitlist
                           </button>
                           <button
                             onClick={() => handleUpdateStatus(post._id, 'in_progress')}
+                            disabled={statusUpdateLoading === post._id}
                             className={`flex items-center justify-center px-4 py-2 rounded ${
                               post.status === 'in_progress'
                                 ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
                                 : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                            }`}
+                            } ${statusUpdateLoading === post._id ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
-                            <Clock className="w-5 h-5 mr-2" />
+                            {statusUpdateLoading === post._id ? (
+                              <svg className="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            ) : (
+                              <Clock className="w-5 h-5 mr-2" />
+                            )}
                             In Progress
                           </button>
                           <button
                             onClick={() => handleUpdateStatus(post._id, 'completed')}
+                            disabled={statusUpdateLoading === post._id}
                             className={`flex items-center justify-center px-4 py-2 rounded ${
                               post.status === 'completed'
                                 ? 'bg-green-100 text-green-700 border-2 border-green-300'
                                 : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                            }`}
+                            } ${statusUpdateLoading === post._id ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
-                            <CheckCircle className="w-5 h-5 mr-2" />
+                            {statusUpdateLoading === post._id ? (
+                              <svg className="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            ) : (
+                              <CheckCircle className="w-5 h-5 mr-2" />
+                            )}
                             Completed
                           </button>
                           <button
                             onClick={() => handleUpdateStatus(post._id, 'posted')}
+                            disabled={statusUpdateLoading === post._id}
                             className={`flex items-center justify-center px-4 py-2 rounded ${
                               post.status === 'posted'
                                 ? 'bg-red-100 text-red-700 border-2 border-red-300'
                                 : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                            }`}
+                            } ${statusUpdateLoading === post._id ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
-                            <AlertTriangle className="w-5 h-5 mr-2" />
+                            {statusUpdateLoading === post._id ? (
+                              <svg className="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            ) : (
+                              <AlertTriangle className="w-5 h-5 mr-2" />
+                            )}
                             Reset
                           </button>
                         </div>

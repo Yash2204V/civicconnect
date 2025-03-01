@@ -265,12 +265,22 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     setError(null);
     try {
+      // Store the original authorization header
+      const originalAuth = axios.defaults.headers.common['Authorization'];
+      
       // Set admin authentication in headers for the API call
       if (isAdminAuthenticated) {
         axios.defaults.headers.common['Authorization'] = 'admin-user-id';
       }
       
       const response = await axios.patch(`${API_URL}/posts/${postId}/status`, { status });
+      
+      // Restore the original authorization header
+      if (originalAuth) {
+        axios.defaults.headers.common['Authorization'] = originalAuth;
+      } else {
+        delete axios.defaults.headers.common['Authorization'];
+      }
       
       // Ensure the response has all required fields
       const normalizedPost = {
@@ -301,11 +311,6 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw err;
     } finally {
       setLoading(false);
-      
-      // Reset authorization header if we temporarily set it for admin
-      if (isAdminAuthenticated && isAuthenticated && user) {
-        axios.defaults.headers.common['Authorization'] = user._id;
-      }
     }
   };
 
