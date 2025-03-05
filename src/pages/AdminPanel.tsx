@@ -1,18 +1,56 @@
-import { useState, useEffect } from 'react';
-import { 
-  Clock, 
-  CheckCircle, 
-  AlertTriangle, 
-  Search, 
-  Filter, 
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  AlertTriangle,
+  Clock,
+  CheckCircle,
+  Search,
+  ArrowLeft,
+  Filter,
   MapPin,
+  LogOut,
+  RefreshCw,
+  ChevronDown,
+  X,
   MessageCircle,
-  Vote,
+  ThumbsUp,
+  Send,
+  Eye,
+  EyeOff,
+  BarChart2,
+  PieChart,
+  TrendingUp,
+  Users,
+  Calendar,
+  Layers,
+  Zap,
+  Sparkles
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePosts } from '../context/PostContext';
+
+interface Post {
+  _id: string;
+  title: string;
+  description: string;
+  mediaUrl?: string;
+  media?: {
+    data: Buffer;
+    contentType: string;
+  };
+  mediaType: 'image' | 'video';
+  status: 'posted' | 'waitlist' | 'in_progress' | 'completed';
+  votes: string[];
+  category: string;
+  location: string;
+  user: {
+    _id: string;
+    name: string;
+    email?: string;
+  };
+  createdAt: string;
+  comments: Comment[];
+}
 
 interface Comment {
   _id: string;
@@ -24,37 +62,42 @@ interface Comment {
   createdAt: string;
 }
 
-const categories = [
-  'All Categories',
-  'Infrastructure & Public Services',
-  'Environmental Concerns',
-  'Law & Order Issues',
-  'Housing & Urban Development',
-  'Education & Healthcare',
-  'Unemployment & Economic Issues',
-  'Digital & Technological Issues',
-  'Governance & Political Issues',
-  'Social Issues'
-];
+interface CategoryData {
+  name: string;
+  count: number;
+  color: string;
+}
+
+interface StatusData {
+  name: string;
+  count: number;
+  color: string;
+}
 
 const AdminPanel = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { posts, loading, error, fetchPosts, addComment, updatePostStatus } = usePosts();
-  
+  const { posts, loading, error, fetchPosts, updatePostStatus } = usePosts();
   const [filter, setFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('All Categories');
   const [searchTerm, setSearchTerm] = useState('');
-  const [expandedPost, setExpandedPost] = useState<string | null>(null);
-  const [commentText, setCommentText] = useState<{[key: string]: string}>({});
-  const [selectedPost, setSelectedPost] = useState<any | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [statusUpdateLoading, setStatusUpdateLoading] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState('votes');
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [commentText, setCommentText] = useState('');
+  const [showStats, setShowStats] = useState(false);
+  const [activeTab, setActiveTab] = useState('issues');
+  const [showIntro, setShowIntro] = useState(true);
+
+  const categoryDropdownRef = useRef<HTMLDivElement>(null);
+  const filtersRef = useRef<HTMLDivElement>(null);
 
   // Check if admin is authenticated
   useEffect(() => {
-    const isAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
-    if (!isAuthenticated) {
+    const isAdminAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
+    if (!isAdminAuthenticated) {
       navigate('/admin-login');
     }
   }, [navigate]);
@@ -62,482 +105,914 @@ const AdminPanel = () => {
   // Fetch posts when component mounts
   useEffect(() => {
     fetchPosts();
+
+    // Hide intro after 3 seconds
+    const timer = setTimeout(() => {
+      setShowIntro(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  const handleUpdateStatus = async (postId: string, status: 'posted' | 'waitlist' | 'in_progress' | 'completed') => {
-    try {
-      setStatusUpdateLoading(postId);
-      
-      // Update post status
-      await updatePostStatus(postId, status);
-      
-      // Update selected post if it's the one being updated
-      if (selectedPost && selectedPost._id === postId) {
-        setSelectedPost({...selectedPost, status});
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
+        setShowCategoryDropdown(false);
       }
-      
-      // Refresh posts to update the UI
-      await fetchPosts();
-    } catch (error) {
-      console.error('Error updating status:', error);
-      alert('Failed to update status. Please try again.');
-    } finally {
-      setStatusUpdateLoading(null);
+      if (filtersRef.current && !filtersRef.current.contains(event.target as Node)) {
+        setShowFilters(false);
+      }
     }
-  };
 
-  const handleAddComment = async (postId: string) => {
-    if (!commentText[postId]?.trim()) return;
-    
-    try {
-      await addComment(postId, commentText[postId]);
-      setCommentText({...commentText, [postId]: ''});
-    } catch (error) {
-      console.error('Error adding comment:', error);
-    }
-  };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleLogout = () => {
     sessionStorage.removeItem('adminAuthenticated');
     navigate('/admin-login');
   };
 
-  const filteredPosts = posts
-    .filter(post => filter === 'all' || post.status === filter)
-    .filter(post => categoryFilter === 'All Categories' || post.category === categoryFilter)
-    .filter(post => 
-      searchTerm === '' || 
-      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (post.location && post.location.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchPosts();
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 800);
+  };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'posted':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'waitlist':
-        return 'bg-orange-100 text-orange-800';
-      case 'in_progress':
-        return 'bg-blue-100 text-blue-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  const handleUpdateStatus = async (postId: string, status: Post['status']) => {
+    setIsUpdating(true);
+    try {
+      await updatePostStatus(postId, status);
+
+      // Update the selected post if it's the one being updated
+      if (selectedPost && selectedPost._id === postId) {
+        setSelectedPost(prev => prev ? { ...prev, status } : null);
+      }
+    } catch (error) {
+      console.error('Error updating post status:', error);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const toggleCategorySelection = (cat: string) => {
+    if (selectedCategories.includes(cat)) {
+      setSelectedCategories(selectedCategories.filter(c => c !== cat));
+    } else {
+      setSelectedCategories([...selectedCategories, cat]);
+    }
+  };
+
+  const getStatusIcon = (status: Post['status']) => {
     switch (status) {
       case 'posted':
-        return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
+        return <AlertTriangle className="w-5 h-5 text-amber-500" />;
       case 'waitlist':
         return <Clock className="w-5 h-5 text-orange-500" />;
       case 'in_progress':
         return <Clock className="w-5 h-5 text-blue-500" />;
       case 'completed':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
+        return <CheckCircle className="w-5 h-5 text-emerald-500" />;
     }
   };
 
-  // Stats for dashboard
-  const totalIssues = posts.length;
-  const inProgressCount = posts.filter(post => post.status === 'in_progress').length;
-  const completedCount = posts.filter(post => post.status === 'completed').length;
-  const totalVotes = posts.reduce((sum, post) => sum + post.votes.length, 0);
-
-  const stats = [
-    { 
-      name: 'Total Issues', 
-      value: totalIssues, 
-      icon: <AlertTriangle className="w-6 h-6 text-red-500" />,
-      color: 'bg-red-50'
-    },
-    { 
-      name: 'In Progress', 
-      value: inProgressCount,
-      icon: <Clock className="w-6 h-6 text-blue-500" />,
-      color: 'bg-blue-50'
-    },
-    { 
-      name: 'Completed', 
-      value: completedCount,
-      icon: <CheckCircle className="w-6 h-6 text-green-500" />,
-      color: 'bg-green-50'
-    },
-    { 
-      name: 'Total Votes', 
-      value: totalVotes,
-      icon: <Vote className="w-6 h-6 text-purple-500" />,
-      color: 'bg-purple-50'
+  const getStatusText = (status: Post['status']) => {
+    switch (status) {
+      case 'posted':
+        return 'Reported';
+      case 'waitlist':
+        return 'In Waitlist';
+      case 'in_progress':
+        return 'In Progress';
+      case 'completed':
+        return 'Completed';
     }
+  };
+
+  const getStatusClass = (status: Post['status']) => {
+    switch (status) {
+      case 'posted':
+        return 'status-badge-posted';
+      case 'waitlist':
+        return 'status-badge-waitlist';
+      case 'in_progress':
+        return 'status-badge-in_progress';
+      case 'completed':
+        return 'status-badge-completed';
+    }
+  };
+
+  const getStatusColor = (status: Post['status']) => {
+    switch (status) {
+      case 'posted':
+        return '#f59e0b';
+      case 'waitlist':
+        return '#f97316';
+      case 'in_progress':
+        return '#3b82f6';
+      case 'completed':
+        return '#10b981';
+    }
+  };
+
+  // Filter and sort posts
+  const filteredPosts = posts
+    .filter(post => filter === 'all' || post.status === filter)
+    .filter(post =>
+      searchTerm === '' ||
+      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.location.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter(post =>
+      selectedCategories.length === 0 ||
+      selectedCategories.includes(post.category)
+    )
+    .sort((a, b) => {
+      if (sortBy === 'votes') {
+        return b.votes.length - a.votes.length;
+      } else if (sortBy === 'date') {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      } else if (sortBy === 'status') {
+        const statusOrder = { posted: 0, waitlist: 1, in_progress: 2, completed: 3 };
+        return statusOrder[a.status] - statusOrder[b.status];
+      } else if (sortBy === 'comments') {
+        return b.comments.length - a.comments.length;
+      }
+      return 0;
+    });
+
+  // Calculate statistics
+  const totalIssues = posts.length;
+  const resolvedIssues = posts.filter(post => post.status === 'completed').length;
+  const inProgressIssues = posts.filter(post => post.status === 'in_progress').length;
+  const waitlistIssues = posts.filter(post => post.status === 'waitlist').length;
+  const reportedIssues = posts.filter(post => post.status === 'posted').length;
+  const totalVotes = posts.reduce((sum, post) => sum + post.votes.length, 0);
+  const totalComments = posts.reduce((sum, post) => sum + post.comments.length, 0);
+  const uniqueUsers = new Set(posts.map(post => post.user._id)).size;
+
+  // Category data for charts
+  const categories = posts.reduce((acc: { [key: string]: number }, post) => {
+    acc[post.category] = (acc[post.category] || 0) + 1;
+    return acc;
+  }, {});
+
+  const categoryColors = [
+    '#8b5cf6', '#3b82f6', '#06b6d4', '#10b981', '#84cc16',
+    '#eab308', '#f97316', '#ef4444', '#ec4899', '#a855f7'
   ];
 
+  const categoryData: CategoryData[] = Object.entries(categories)
+    .map(([name, count], index) => ({
+      name,
+      count,
+      color: categoryColors[index % categoryColors.length]
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+
+  // Status data for charts
+  const statusData: StatusData[] = [
+    { name: 'Reported', count: reportedIssues, color: getStatusColor('posted') },
+    { name: 'Waitlist', count: waitlistIssues, color: getStatusColor('waitlist') },
+    { name: 'In Progress', count: inProgressIssues, color: getStatusColor('in_progress') },
+    { name: 'Completed', count: resolvedIssues, color: getStatusColor('completed') }
+  ];
+
+  // Recent activity
+  const recentActivity = [
+    ...posts.map(post => ({
+      type: 'post',
+      title: post.title,
+      user: post.user.name,
+      status: post.status,
+      date: new Date(post.createdAt)
+    })),
+    ...posts.flatMap(post => post.comments.map(comment => ({
+      type: 'comment',
+      title: post.title,
+      user: comment.user.name,
+      text: comment.text,
+      date: new Date(comment.createdAt)
+    }))),
+    ...posts.flatMap(post => post.votes.map((_, index) => ({
+      type: 'vote',
+      title: post.title,
+      user: 'A user',
+      date: new Date(new Date(post.createdAt).getTime() + index * 86400000)
+    })))
+  ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 10);
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-blue-600">CivicConnect Admin</h1>
-            </div>
-            <div className="flex space-x-4">
-              <Link
-                to="/dashboard"
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+    <div className="min-h-screen bg-gray-50 bg-dot-pattern">
+      {/* Intro Animation */}
+      <AnimatePresence>
+        {showIntro && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-primary"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <motion.div
+              className="text-center"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 1.2, opacity: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <motion.div
+                className="flex items-center justify-center mb-4"
+                animate={{
+                  rotate: [0, 10, -10, 10, 0],
+                  scale: [1, 1.1, 1, 1.1, 1]
+                }}
+                transition={{ duration: 2 }}
               >
-                View Public Dashboard
+                <Sparkles className="h-16 w-16 text-white" />
+              </motion.div>
+              <motion.h1
+                className="text-4xl font-bold text-white mb-2"
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 1.5 }}
+              >
+                Admin Dashboard
+              </motion.h1>
+              <motion.p
+                className="text-white text-xl"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                Manage community issues
+              </motion.p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Header */}
+      <div className="bg-white bg-opacity-90 backdrop-blur-md border-b shadow-sm sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center">
+              <Link to="/dashboard" className="mr-4 text-indigo-600 hover:text-indigo-800 transition-colors duration-200">
+                <ArrowLeft className="h-6 w-6" />
               </Link>
+              <h1 className="text-2xl font-bold text-gradient-primary">Admin Dashboard</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setShowStats(!showStats)}
+                className="p-2 rounded-full hover:bg-indigo-50 transition-colors duration-200 text-indigo-600"
+                title={showStats ? "Hide Statistics" : "Show Statistics"}
+              >
+                {showStats ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+              <button
+                onClick={handleRefresh}
+                className="p-2 rounded-full hover:bg-indigo-50 transition-colors duration-200 text-indigo-600"
+                title="Refresh Data"
+              >
+                <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
+              </button>
               <button
                 onClick={handleLogout}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                className="p-2 rounded-full hover:bg-indigo-50 transition-colors duration-200 text-indigo-600"
+                title="Logout"
               >
-                Logout
+                <LogOut className="h-5 w-5" />
               </button>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Stats */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          {stats.map((stat, index) => (
-            <motion.div
-              key={stat.name}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className={`${stat.color} overflow-hidden rounded-lg shadow`}
-            >
-              <div className="px-4 py-5 sm:p-6">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    {stat.icon}
+      {/* Stats Overview */}
+      <AnimatePresence>
+        {showStats && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white border-b"
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-gradient-to-br from-amber-50 to-amber-100 p-4 rounded-xl shadow-sm">
+                  <div className="flex items-center mb-2">
+                    <div className="p-2 rounded-full bg-amber-200 text-amber-700">
+                      <Layers className="h-5 w-5" />
+                    </div>
+                    <h3 className="ml-2 font-semibold text-amber-900">Total Issues</h3>
                   </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      {stat.name}
-                    </dt>
-                    <dd className="flex items-baseline">
-                      <div className="text-2xl font-semibold text-gray-900">
-                        {stat.value}
-                      </div>
-                    </dd>
+                  <p className="text-2xl font-bold text-amber-900">{totalIssues}</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 rounded-xl shadow-sm">
+                  <div className="flex items-center mb-2">
+                    <div className="p-2 rounded-full bg-emerald-200 text-emerald-700">
+                      <CheckCircle className="h-5 w-5" />
+                    </div>
+                    <h3 className="ml-2 font-semibold text-emerald-900">Resolved</h3>
                   </div>
+                  <p className="text-2xl font-bold text-emerald-900">{resolvedIssues}</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl shadow-sm">
+                  <div className="flex items-center mb-2">
+                    <div className="p-2 rounded-full bg-blue-200 text-blue-700">
+                      <Users className="h-5 w-5" />
+                    </div>
+                    <h3 className="ml-2 font-semibold text-blue-900">Users</h3>
+                  </div>
+                  <p className="text-2xl font-bold text-blue-900">{uniqueUsers}</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl shadow-sm">
+                  <div className="flex items-center mb-2">
+                    <div className="p-2 rounded-full bg-purple-200 text-purple-700">
+                      <MessageCircle className="h-5 w-5" />
+                    </div>
+                    <h3 className="ml-2 font-semibold text-purple-900">Engagement</h3>
+                  </div>
+                  <p className="text-2xl font-bold text-purple-900">{totalVotes + totalComments}</p>
                 </div>
               </div>
-            </motion.div>
-          ))}
-        </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <input
-                type="text"
-                placeholder="Search issues..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            
-            <div className="flex space-x-2">
-              <div className="relative">
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
-                >
-                  {categories.map((category) => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
-                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              </div>
-              
-              <select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All Status</option>
-                <option value="posted">Posted</option>
-                <option value="waitlist">Waitlist</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
-          </div>
-        </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                  <h3 className="font-semibold text-gray-900 mb-4">Issue Status Distribution</h3>
+                  <div className="flex items-center space-x-2 mb-4">
+                    {statusData.map((status) => (
+                      <div
+                        key={status.name}
+                        className="h-4 rounded-full"
+                        style={{
+                          backgroundColor: status.color,
+                          width: `${(status.count / totalIssues) * 100}%`
+                        }}
+                        title={`${status.name}: ${status.count} (${Math.round((status.count / totalIssues) * 100)}%)`}
+                      ></div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {statusData.map((status) => (
+                      <div key={status.name} className="flex items-center">
+                        <div
+                          className="h-3 w-3 rounded-full mr-2"
+                          style={{ backgroundColor: status.color }}
+                        ></div>
+                        <span className="text-xs text-gray-600">{status.name}: {status.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-        {/* Loading State */}
-        {loading && (
-          <div className="flex justify-center items-center py-12">
-            <svg className="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6">
-            <p>{error}</p>
-            <button 
-              onClick={() => fetchPosts()}
-              className="mt-2 text-sm font-medium underline"
-            >
-              Try again
-            </button>
-          </div>
-        )}
-
-        {/* Issues List */}
-        <div className="grid grid-cols-1 gap-6">
-          {!loading && filteredPosts.length > 0 ? (
-            filteredPosts.map((post) => (
-              <motion.div 
-                key={post._id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-lg shadow-md overflow-hidden"
-              >
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-900">{post.title}</h2>
-                      <div className="flex items-center mt-1">
-                        <img
-                          src={`https://api.dicebear.com/7.x/initials/svg?seed=${post.user.name}`}
-                          alt={post.user.name}
-                          className="h-5 w-5 rounded-full mr-2"
-                        />
-                        <p className="text-sm text-gray-500">
-                          Posted by {post.user.name} {post.user.email && `(${post.user.email})`}
-                        </p>
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                  <h3 className="font-semibold text-gray-900 mb-4">Top Categories</h3>
+                  {categoryData.map((category, index) => (
+                    <div key={category.name} className="mb-2">
+                      <div className="flex justify-between text-xs text-gray-600 mb-1">
+                        <span>{category.name}</span>
+                        <span>{category.count} issues</span>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-2.5">
+                        <div
+                          className="h-2.5 rounded-full"
+                          style={{
+                            width: `${(category.count / Math.max(...categoryData.map(c => c.count))) * 100}%`,
+                            backgroundColor: category.color
+                          }}
+                        ></div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(post.status)}`}>
-                        {getStatusIcon(post.status)}
-                        <span className="ml-1 capitalize">{post.status.replace('_', ' ')}</span>
-                      </span>
-                      <span className="text-sm font-medium">
-                        {post.votes.length} votes
-                      </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Tabs */}
+        <div className="flex border-b mb-6">
+          <button
+            onClick={() => setActiveTab('issues')}
+            className={`py-2 px-4 font-medium relative ${activeTab === 'issues'
+                ? 'text-indigo-600'
+                : 'text-gray-500 hover:text-gray-700'
+              }`}
+          >
+            Issues Management
+            {activeTab === 'issues' && (
+              <motion.div
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
+                layoutId="adminActiveTab"
+              />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('activity')}
+            className={`py-2 px-4 font-medium relative ${activeTab === 'activity'
+                ? 'text-indigo-600'
+                : 'text-gray-500 hover:text-gray-700'
+              }`}
+          >
+            Recent Activity
+            {activeTab === 'activity' && (
+              <motion.div
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
+                layoutId="adminActiveTab"
+              />
+            )}
+          </button>
+        </div>
+
+        <AnimatePresence mode="wait">
+          {activeTab === 'issues' && (
+            <motion.div
+              key="issues-tab"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex flex-col md:flex-row gap-6">
+                {/* Left Column - Posts List */}
+                <div className="md:w-1/2 lg:w-2/3">
+                  <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                      <h2 className="text-xl font-semibold text-gray-900 mb-2 sm:mb-0">Community Issues</h2>
+                      <div className="flex space-x-2 w-full sm:w-auto">
+                        <div className="relative flex-1 sm:flex-none">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400 h-4 w-4" />
+                          <input
+                            type="text"
+                            placeholder="Search..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-9 pr-4 py-2 border border-indigo-100 rounded-lg bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm w-full"
+                          />
+                        </div>
+                        <div className="relative" ref={filtersRef}>
+                          <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className="flex items-center space-x-2 px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                          >
+                            <Filter className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm font-medium">Sort</span>
+                          </button>
+
+                          {showFilters && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg z-50 border border-gray-100 overflow-hidden">
+                              <div className="p-2">
+                                {[
+                                  { value: 'votes', label: 'Most Votes', icon: <ThumbsUp className="h-4 w-4" /> },
+                                  { value: 'date', label: 'Newest First', icon: <Calendar className="h-4 w-4" /> },
+                                  { value: 'comments', label: 'Most Comments', icon: <MessageCircle className="h-4 w-4" /> },
+                                  { value: 'status', label: 'By Status', icon: <Layers className="h-4 w-4" /> }
+                                ].map((option) => (
+                                  <div
+                                    key={option.value}
+                                    className={`flex items-center px-3 py-2 hover:bg-indigo-50 rounded-lg cursor-pointer ${sortBy === option.value ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700'
+                                      }`}
+                                    onClick={() => {
+                                      setSortBy(option.value);
+                                      setShowFilters(false);
+                                    }}
+                                  >
+                                    <span className="mr-2">{option.icon}</span>
+                                    <span className="text-sm">{option.label}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {post.category && (
-                      <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                        {post.category}
-                      </span>
+                    {/* Filters */}
+                    <div className="flex space-x-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+                      {['all', 'posted', 'waitlist', 'in_progress', 'completed'].map((status) => (
+                        <motion.button
+                          key={status}
+                          onClick={() => setFilter(status)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${filter === status
+                              ? 'bg-gradient-primary text-white shadow-md'
+                              : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                            } transition-colors duration-200`}
+                        >
+                          {status === 'all' ? 'All Issues' : getStatusText(status as Post['status'])}
+                        </motion.button>
+                      ))}
+                    </div>
+
+                    {/* Category Filter */}
+                    <div className="mb-4">
+                      <div className="relative" ref={categoryDropdownRef}>
+                        <button
+                          onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                          className="flex items-center justify-between w-full px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm"
+                        >
+                          <span className="font-medium truncate">
+                            {selectedCategories.length === 0
+                              ? 'Filter by Category'
+                              : `${selectedCategories.length} categories selected`}
+                          </span>
+                          <ChevronDown className="h-4 w-4 text-gray-500" />
+                        </button>
+
+                        {showCategoryDropdown && (
+                          <div className="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg z-50 border border-gray-100 overflow-hidden">
+                            <div className="p-2 max-h-60 overflow-y-auto custom-scrollbar">
+                              {Array.from(new Set(posts.map(post => post.category))).map((cat) => (
+                                <div
+                                  key={cat}
+                                  className="flex items-center px-3 py-2 hover:bg-indigo-50 rounded-lg cursor-pointer"
+                                  onClick={() => toggleCategorySelection(cat)}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedCategories.includes(cat)}
+                                    onChange={() => { }}
+                                    className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                  />
+                                  <span className="ml-2 text-sm">{cat}</span>
+                                </div>
+                              ))}
+                            </div>
+                            {selectedCategories.length > 0 && (
+                              <div className="border-t p-2 flex justify-between">
+                                <button
+                                  onClick={() => setSelectedCategories([])}
+                                  className="text-xs text-gray-500 hover:text-gray-700"
+                                >
+                                  Clear all
+                                </button>
+                                <button
+                                  onClick={() => setShowCategoryDropdown(false)}
+                                  className="text-xs text-indigo-600 font-medium hover:text-indigo-800"
+                                >
+                                  Apply
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Loading State */}
+                    {loading && (
+                      <div className="flex justify-center items-center py-12">
+                        <div className="relative">
+                          <div className="h-16 w-16 rounded-full border-t-4 border-b-4 border-indigo-500 animate-spin"></div>
+                          <div className="absolute top-0 left-0 h-16 w-16 rounded-full border-t-4 border-b-4 border-indigo-300 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+                        </div>
+                      </div>
                     )}
-                    {post.location && (
-                      <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded flex items-center">
-                        <MapPin className="h-3 w-3 mr-1" />
-                        {post.location}
-                      </span>
+
+                    {/* Error State */}
+                    {error && (
+                      <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-lg mb-6">
+                        <p className="font-medium">{error}</p>
+                        <button
+                          onClick={() => fetchPosts()}
+                          className="mt-2 text-sm font-medium underline"
+                        >
+                          Try again
+                        </button>
+                      </div>
                     )}
-                    <span className="text-xs text-gray-500">
-                      {new Date(post.createdAt).toLocaleDateString()}
-                    </span>
+
+                    {/* Posts List */}
+                    {!loading && filteredPosts.length > 0 ? (
+                      <div className="space-y-3">
+                        {filteredPosts.map((post) => (
+                          <motion.div
+                            key={post._id}
+                            onClick={() => setSelectedPost(post)}
+                            className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedPost?._id === post._id
+                                ? 'border-indigo-500 bg-indigo-50'
+                                : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/30'
+                              }`}
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.99 }}
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="font-medium text-gray-900">{post.title}</h3>
+                              <span className={`status-badge ${getStatusClass(post.status)}`}>
+                                {getStatusIcon(post.status)}
+                                <span className="ml-1 capitalize">{post.status.replace('_', ' ')}</span>
+                              </span>
+                            </div>
+
+                            <p className="text-gray-600 text-sm mb-2 line-clamp-2">{post.description}</p>
+
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              {post.category && (
+                                <span className="category-badge">
+                                  {post.category}
+                                </span>
+                              )}
+                              {post.location && (
+                                <span className="location-badge">
+                                  <MapPin className="h-3 w-3 mr-1" />
+                                  {post.location}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex justify-between items-center text-xs text-gray-500">
+                              <div className="flex items-center">
+                                <div className="h-5 w-5 rounded-full bg-gradient-secondary flex items-center justify-center text-white font-medium shadow-sm mr-1">
+                                  {post.user.name.charAt(0).toUpperCase()}
+                                </div>
+                                <span>{post.user.name}</span>
+                              </div>
+                              <div className="flex items-center space-x-3">
+                                <span className="flex items-center">
+                                  <ThumbsUp className="h-3 w-3 mr-1 text-indigo-500" />
+                                  {post.votes.length}
+                                </span>
+                                <span className="flex items-center">
+                                  <MessageCircle className="h-3 w-3 mr-1 text-indigo-500" />
+                                  {post.comments.length}
+                                </span>
+                                <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    ) : !loading && (
+                      <div className="text-center py-10">
+                        <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900">No issues found</h3>
+                        <p className="text-gray-500 mt-2">Try adjusting your search or filter criteria</p>
+                      </div>
+                    )}
                   </div>
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <p className="text-gray-700 mb-4">{post.description}</p>
+                {/* Right Column - Post Details */}
+                <div className="md:w-1/2 lg:w-1/3">
+                  {selectedPost ? (
+                    <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24">
+                      <div className="flex justify-between items-start mb-4">
+                        <h2 className="text-xl font-semibold text-gray-900">{selectedPost.title}</h2>
+                        <span className={`status-badge ${getStatusClass(selectedPost.status)}`}>
+                          {getStatusIcon(selectedPost.status)}
+                          <span className="ml-1 capitalize">{selectedPost.status.replace('_', ' ')}</span>
+                        </span>
+                      </div>
 
-                      {post.mediaType === 'image' ? (
-                        <img
-                          src={post.mediaUrl}
-                          alt={post.title}
-                          className="w-full h-64 object-cover rounded-lg mb-4"
-                        />
-                      ) : (
-                        <video
-                          src={post.mediaUrl}
-                          controls
-                          className="w-full h-64 object-cover rounded-lg mb-4"
-                        />
+
+                      {/* Media */}
+                      {selectedPost.media && (
+                        <div className="relative aspect-video cinematic-gradient-overlay">
+                          {selectedPost.mediaType === 'image' ? (
+                            <img
+                              src={`data:${selectedPost.media.contentType};base64,${selectedPost.media.data.toString('base64')}`}
+                              alt={selectedPost.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <video
+                              src={`data:${selectedPost.media.contentType};base64,${selectedPost.media.data.toString('base64')}`}
+                              controls
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                        </div>
                       )}
-                    </div>
 
-                    <div>
-                      {/* Status Update Buttons */}
-                      <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                        <h3 className="text-sm font-medium text-gray-900 mb-3">Update Status</h3>
+                      <div className="mb-4">
+                        <h3 className="font-medium text-gray-900 mb-1">Description</h3>
+                        <p className="text-gray-700">{selectedPost.description}</p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {selectedPost.category && (
+                          <span className="category-badge">
+                            {selectedPost.category}
+                          </span>
+                        )}
+                        {selectedPost.location && (
+                          <span className="location-badge">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            {selectedPost.location}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="mb-6">
+                        <h3 className="font-medium text-gray-900 mb-1">Reported by</h3>
+                        <div className="flex items-center">
+                          <div className="h-8 w-8 rounded-full bg-gradient-secondary flex items-center justify-center text-white font-medium shadow-sm mr-2">
+                            {selectedPost.user.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{selectedPost.user.name}</p>
+                            <p className="text-xs text-gray-500">
+                              {selectedPost.user.email || 'No email provided'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mb-6">
+                        <h3 className="font-medium text-gray-900 mb-2">Update Status</h3>
                         <div className="grid grid-cols-2 gap-2">
-                          <button
-                            onClick={() => handleUpdateStatus(post._id, 'waitlist')}
-                            disabled={statusUpdateLoading === post._id}
-                            className={`flex items-center justify-center px-4 py-2 rounded ${
-                              post.status === 'waitlist'
-                                ? 'bg-yellow-100 text-yellow-700 border-2 border-yellow-300'
-                                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                            } ${statusUpdateLoading === post._id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            {statusUpdateLoading === post._id ? (
-                              <svg className="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                            ) : (
-                              <AlertTriangle className="w-5 h-5 mr-2" />
-                            )}
-                            Waitlist
-                          </button>
-                          <button
-                            onClick={() => handleUpdateStatus(post._id, 'in_progress')}
-                            disabled={statusUpdateLoading === post._id}
-                            className={`flex items-center justify-center px-4 py-2 rounded ${
-                              post.status === 'in_progress'
-                                ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
-                                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                            } ${statusUpdateLoading === post._id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            {statusUpdateLoading === post._id ? (
-                              <svg className="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                            ) : (
-                              <Clock className="w-5 h-5 mr-2" />
-                            )}
-                            In Progress
-                          </button>
-                          <button
-                            onClick={() => handleUpdateStatus(post._id, 'completed')}
-                            disabled={statusUpdateLoading === post._id}
-                            className={`flex items-center justify-center px-4 py-2 rounded ${
-                              post.status === 'completed'
-                                ? 'bg-green-100 text-green-700 border-2 border-green-300'
-                                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                            } ${statusUpdateLoading === post._id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            {statusUpdateLoading === post._id ? (
-                              <svg className="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                            ) : (
-                              <CheckCircle className="w-5 h-5 mr-2" />
-                            )}
-                            Completed
-                          </button>
-                          <button
-                            onClick={() => handleUpdateStatus(post._id, 'posted')}
-                            disabled={statusUpdateLoading === post._id}
-                            className={`flex items-center justify-center px-4 py-2 rounded ${
-                              post.status === 'posted'
-                                ? 'bg-red-100 text-red-700 border-2 border-red-300'
-                                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                            } ${statusUpdateLoading === post._id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            {statusUpdateLoading === post._id ? (
-                              <svg className="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                            ) : (
-                              <AlertTriangle className="w-5 h-5 mr-2" />
-                            )}
-                            Reset
-                          </button>
+                          {['posted', 'waitlist', 'in_progress', 'completed'].map((status) => (
+                            <motion.button
+                              key={status}
+                              onClick={() => handleUpdateStatus(selectedPost._id, status as Post['status'])}
+                              disabled={isUpdating || selectedPost.status === status}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className={`py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center ${selectedPost.status === status
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                  : `${getStatusClass(status as Post['status'])} hover:opacity-90`
+                                } transition-colors duration-200`}
+                            >
+                              {getStatusIcon(status as Post['status'])}
+                              <span className="ml-1 capitalize">{status.replace('_', ' ')}</span>
+                            </motion.button>
+                          ))}
                         </div>
                       </div>
 
                       {/* Comments Section */}
                       <div>
-                        <button
-                          onClick={() => setExpandedPost(expandedPost === post._id ? null : post._id)}
-                          className="text-blue-500 hover:text-blue-700 text-sm font-medium mb-4 flex items-center"
-                        >
-                          <MessageCircle className="w-4 h-4 mr-1" />
-                          {expandedPost === post._id ? 'Hide Comments' : `Show Comments (${post.comments?.length || 0})`}
-                        </button>
-                        
-                        {expandedPost === post._id && (
-                          <div className="mb-4 border-t border-gray-100 pt-4">
-                            {post.comments && post.comments.length > 0 ? (
-                              <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
-                                {post.comments.map((comment: Comment) => (
-                                  <div key={comment._id} className="flex space-x-3">
-                                    <img
-                                      src={`https://api.dicebear.com/7.x/initials/svg?seed=${comment.user.name}`}
-                                      alt={comment.user.name}
-                                      className="h-8 w-8 rounded-full"
-                                    />
-                                    <div className="flex-1">
-                                      <div className="bg-gray-50 p-3 rounded-lg">
-                                        <p className="font-medium text-sm text-gray-900">{comment.user.name}</p>
-                                        <p className="text-gray-700 text-sm">{comment.text}</p>
-                                      </div>
-                                      <p className="text-xs text-gray-500 mt-1">
-                                        {new Date(comment.createdAt).toLocaleString()}
-                                      </p>
-                                    </div>
+                        <h3 className="font-medium text-gray-900 mb-2">Comments ({selectedPost.comments.length})</h3>
+                        {selectedPost.comments.length > 0 ? (
+                          <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar pr-2 mb-4">
+                            {selectedPost.comments.map((comment) => (
+                              <div key={comment._id} className="flex space-x-2">
+                                <div className="h-8 w-8 rounded-full bg-gradient-secondary flex items-center justify-center text-white font-medium shadow-sm flex-shrink-0">
+                                  {comment.user.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="bg-gray-50 p-3 rounded-lg">
+                                    <p className="font-medium text-sm text-gray-900">{comment.user.name}</p>
+                                    <p className="text-gray-700 text-sm">{comment.text}</p>
                                   </div>
-                                ))}
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {new Date(comment.createdAt).toLocaleString(undefined, {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </p>
+                                </div>
                               </div>
-                            ) : (
-                              <p className="text-gray-500 text-sm mb-3">No comments yet.</p>
-                            )}
-                            
-                            <div className="flex space-x-3">
-                              <img
-                                src="https://api.dicebear.com/7.x/initials/svg?seed=Admin"
-                                alt="Admin"
-                                className="h-8 w-8 rounded-full"
-                              />
-                              <div className="flex-1 flex">
-                                <input
-                                  type="text"
-                                  value={commentText[post._id] || ''}
-                                  onChange={(e) => setCommentText({...commentText, [post._id]: e.target.value})}
-                                  placeholder="Add an admin comment..."
-                                  className="flex-1 bg-gray-50 border border-gray-200 rounded-l-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  onKeyPress={(e) => {
-                                    if (e.key === 'Enter') {
-                                      handleAddComment(post._id);
-                                    }
-                                  }}
-                                />
-                                <button
-                                  onClick={() => handleAddComment(post._id)}
-                                  className="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 transition-colors duration-200"
-                                >
-                                  Comment
-                                </button>
-                              </div>
-                            </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 text-sm mb-4">No comments yet.</p>
+                        )}
+
+                        {/* Add Comment */}
+                        <div className="flex space-x-2">
+                          <div className="h-8 w-8 rounded-full bg-gradient-primary flex items-center justify-center text-white font-medium shadow-sm flex-shrink-0">
+                            A
+                          </div>
+                          <div className="flex-1 flex">
+                            <input
+                              type="text"
+                              value={commentText}
+                              onChange={(e) => setCommentText(e.target.value)}
+                              placeholder="Add an admin comment..."
+                              className="flex-1 bg-gray-50 border border-gray-200 rounded-l-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            />
+                            <motion.button
+                              className="bg-gradient-primary text-white px-3 py-2 rounded-r-lg transition-colors duration-200"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <Send className="h-5 w-5" />
+                            </motion.button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-white rounded-xl shadow-sm p-6 text-center">
+                      <div className="mb-6 relative">
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="h-32 w-32 rounded-full bg-indigo-100 animate-pulse-slow"></div>
+                        </div>
+                        <AlertTriangle className="h-16 w-16 text-indigo-400 mx-auto relative z-10" />
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900">No issue selected</h3>
+                      <p className="text-gray-500 mt-2">Select an issue from the list to view details</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'activity' && (
+            <motion.div
+              key="activity-tab"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white rounded-xl shadow-sm p-6"
+            >
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">Recent Activity</h3>
+
+              <div className="space-y-6">
+                {recentActivity.map((activity, index) => (
+                  <div key={index} className="flex">
+                    <div className="mr-4 relative">
+                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${activity.type === 'post'
+                          ? 'bg-indigo-100 text-indigo-600'
+                          : activity.type === 'comment'
+                            ? 'bg-purple-100 text-purple-600'
+                            : 'bg-blue-100 text-blue-600'
+                        }`}>
+                        {activity.type === 'post'
+                          ? <Layers className="h-5 w-5" />
+                          : activity.type === 'comment'
+                            ? <MessageCircle className="h-5 w-5" />
+                            : <ThumbsUp className="h-5 w-5" />
+                        }
+                      </div>
+                      {index < recentActivity.length - 1 && (
+                        <div className="absolute top-10 bottom-0 left-1/2 w-0.5 -ml-px bg-gray-200 h-full"></div>
+                      )}
+                    </div>
+                    <div className="flex-1 pb-6">
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-medium text-gray-900">
+                            {activity.type === 'post'
+                              ? 'New Issue Reported'
+                              : activity.type === 'comment'
+                                ? 'New Comment'
+                                : 'New Vote'
+                            }
+                          </h4>
+                          <span className="text-xs text-gray-500">
+                            {activity.date.toLocaleString(undefined, {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                        <p className="text-gray-700 mb-2">
+                          <span className="font-medium">{activity.user}</span>
+                          {activity.type === 'post'
+                            ? ' reported a new issue: '
+                            : activity.type === 'comment'
+                              ? ' commented on '
+                              : ' voted on '
+                          }
+                          <span className="font-medium">"{activity.title}"</span>
+                        </p>
+                        {activity.type === 'comment' && activity.text && (
+                          <p className="text-sm bg-white p-2 rounded border border-gray-100">
+                            "{activity.text}"
+                          </p>
+                        )}
+                        {activity.type === 'post' && activity.status && (
+                          <div className="mt-2">
+                            <span className={`status-badge ${getStatusClass(activity.status as Post['status'])}`}>
+                              {getStatusIcon(activity.status as Post['status'])}
+                              <span className="ml-1 capitalize">{activity.status.replace('_', ' ')}</span>
+                            </span>
                           </div>
                         )}
                       </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            ))
-          ) : !loading && (
-            <div className="text-center py-10">
-              <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900">No issues found</h3>
-              <p className="text-gray-500 mt-2">Try adjusting your search or filter criteria</p>
-            </div>
+                ))}
+              </div>
+            </motion.div>
           )}
-        </div>
-      </main>
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

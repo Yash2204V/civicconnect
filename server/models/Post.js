@@ -14,9 +14,9 @@ const postSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  mediaUrl: {
-    type: String,
-    required: true
+  media: {
+    data: Buffer,
+    contentType: String
   },
   mediaType: {
     type: String,

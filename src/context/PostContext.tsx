@@ -7,7 +7,11 @@ interface Post {
   _id: string;
   title: string;
   description: string;
-  mediaUrl: string;
+  mediaUrl?: string;
+  media?: {
+    data: Buffer;
+    contentType: string;
+  };
   mediaType: 'image' | 'video';
   status: 'posted' | 'waitlist' | 'in_progress' | 'completed';
   votes: string[];
@@ -36,7 +40,7 @@ interface Comment {
 interface NewPost {
   title: string;
   description: string;
-  mediaUrl: string;
+  media?: File;
   mediaType: 'image' | 'video';
   category: string;
   location: string;
@@ -137,7 +141,24 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post(`${API_URL}/posts`, postData);
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('title', postData.title);
+      formData.append('description', postData.description);
+      formData.append('mediaType', postData.mediaType);
+      formData.append('category', postData.category);
+      formData.append('location', postData.location);
+      
+      // Add media file if it exists
+      if (postData.media) {
+        formData.append('media', postData.media);
+      }
+      
+      const response = await axios.post(`${API_URL}/posts`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       
       // Normalize the response to ensure it has all required fields
       const normalizedPost = {

@@ -1,4 +1,5 @@
 import express from 'express';
+import multer from 'multer';
 import Post from '../models/Post.js';
 import Comment from '../models/Comment.js';
 import Vote from '../models/Vote.js';
@@ -7,16 +8,34 @@ import { adminAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Configure multer for memory storage
+const storage = multer.memoryStorage();
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  }
+});
+
 // Get all posts
 router.get('/', async (req, res) => {
   try {
     const posts = await Post.find().sort({ createdAt: -1 }).populate('user', 'name email');
     
-    // Get comments for each post
+    // Get comments for each post and transform media data to base64
     const postsWithComments = await Promise.all(posts.map(async (post) => {
       const comments = await Comment.find({ post: post._id }).populate('user', 'name');
+      
+      // Convert buffer to base64 string for frontend display
+      const postObj = post.toObject();
+      if (postObj.media && postObj.media.data) {
+        const base64 = Buffer.from(postObj.media.data).toString('base64');
+        const mediaUrl = `data:${postObj.media.contentType};base64,${base64}`;
+        postObj.mediaUrl = mediaUrl;
+      }
+      
       return {
-        ...post.toObject(),
+        ...postObj,
         comments: comments
       };
     }));
@@ -39,8 +58,16 @@ router.get('/:id', async (req, res) => {
     // Get comments for the post
     const comments = await Comment.find({ post: post._id }).populate('user', 'name');
     
+    // Convert buffer to base64 string for frontend display
+    const postObj = post.toObject();
+    if (postObj.media && postObj.media.data) {
+      const base64 = Buffer.from(postObj.media.data).toString('base64');
+      const mediaUrl = `data:${postObj.media.contentType};base64,${base64}`;
+      postObj.mediaUrl = mediaUrl;
+    }
+    
     res.json({
-      ...post.toObject(),
+      ...postObj,
       comments
     });
   } catch (error) {
@@ -49,29 +76,44 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create a new post
-router.post('/', auth, async (req, res) => {
+// Create a new post with media upload
+router.post('/', auth, upload.single('media'), async (req, res) => {
   try {
-    const { title, description, mediaUrl, mediaType, category, location } = req.body;
+    const { title, description, mediaType, category, location } = req.body;
     
     const newPost = new Post({
       user: req.user.userId,
       title,
       description,
-      mediaUrl,
       mediaType,
       category,
       location,
       status: 'posted' // Default status
     });
     
+    // If media file was uploaded, add it to the post
+    if (req.file) {
+      newPost.media = {
+        data: req.file.buffer,
+        contentType: req.file.mimetype
+      };
+    }
+    
     await newPost.save();
     
     // Return the post with user info and empty comments array
     const populatedPost = await Post.findById(newPost._id).populate('user', 'name email');
     
+    // Convert buffer to base64 string for frontend display
+    const postObj = populatedPost.toObject();
+    if (postObj.media && postObj.media.data) {
+      const base64 = Buffer.from(postObj.media.data).toString('base64');
+      const mediaUrl = `data:${postObj.media.contentType};base64,${base64}`;
+      postObj.mediaUrl = mediaUrl;
+    }
+    
     res.status(201).json({
-      ...populatedPost.toObject(),
+      ...postObj,
       comments: []
     });
   } catch (error) {
@@ -102,8 +144,16 @@ router.patch('/:id/status', adminAuth, async (req, res) => {
     // Get comments for the post
     const comments = await Comment.find({ post: post._id }).populate('user', 'name');
     
+    // Convert buffer to base64 string for frontend display
+    const postObj = post.toObject();
+    if (postObj.media && postObj.media.data) {
+      const base64 = Buffer.from(postObj.media.data).toString('base64');
+      const mediaUrl = `data:${postObj.media.contentType};base64,${base64}`;
+      postObj.mediaUrl = mediaUrl;
+    }
+    
     res.json({
-      ...post.toObject(),
+      ...postObj,
       comments
     });
   } catch (error) {
@@ -151,8 +201,16 @@ router.post('/:id/vote', auth, async (req, res) => {
     // Get comments for the post
     const comments = await Comment.find({ post: post._id }).populate('user', 'name');
     
+    // Convert buffer to base64 string for frontend display
+    const postObj = updatedPost.toObject();
+    if (postObj.media && postObj.media.data) {
+      const base64 = Buffer.from(postObj.media.data).toString('base64');
+      const mediaUrl = `data:${postObj.media.contentType};base64,${base64}`;
+      postObj.mediaUrl = mediaUrl;
+    }
+    
     res.json({
-      ...updatedPost.toObject(),
+      ...postObj,
       comments
     });
   } catch (error) {
@@ -200,11 +258,20 @@ router.get('/user/me', auth, async (req, res) => {
   try {
     const posts = await Post.find({ user: req.user.userId }).sort({ createdAt: -1 });
     
-    // Get comments for each post
+    // Get comments for each post and transform media data to base64
     const postsWithComments = await Promise.all(posts.map(async (post) => {
       const comments = await Comment.find({ post: post._id }).populate('user', 'name');
+      
+      // Convert buffer to base64 string for frontend display
+      const postObj = post.toObject();
+      if (postObj.media && postObj.media.data) {
+        const base64 = Buffer.from(postObj.media.data).toString('base64');
+        const mediaUrl = `data:${postObj.media.contentType};base64,${base64}`;
+        postObj.mediaUrl = mediaUrl;
+      }
+      
       return {
-        ...post.toObject(),
+        ...postObj,
         comments: comments
       };
     }));
