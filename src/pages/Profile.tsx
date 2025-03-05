@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Upload, 
-  Loader, 
-  Settings, 
-  LogOut, 
-  ArrowLeft, 
-  ThumbsUp, 
-  AlertTriangle, 
-  Clock, 
+import {
+  Upload,
+  Loader,
+  Settings,
+  LogOut,
+  ArrowLeft,
+  ThumbsUp,
+  AlertTriangle,
+  Clock,
   CheckCircle,
   MapPin,
   User,
@@ -62,7 +62,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
   const { userPosts, loading, error, fetchUserPosts, createPost } = usePosts();
-  
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [media, setMedia] = useState<File | null>(null);
@@ -88,27 +88,27 @@ const Profile = () => {
 
   // Stats for the profile
   const stats: Stat[] = [
-    { 
-      label: 'Posts', 
-      value: userPosts.length, 
+    {
+      label: 'Posts',
+      value: userPosts.length,
       icon: <Upload className="h-4 w-4" />,
       color: 'bg-indigo-100 text-indigo-600'
     },
-    { 
-      label: 'Votes', 
-      value: userPosts.reduce((sum, post) => sum + post.votes.length, 0), 
+    {
+      label: 'Votes',
+      value: userPosts.reduce((sum, post) => sum + post.votes.length, 0),
       icon: <ThumbsUp className="h-4 w-4" />,
       color: 'bg-blue-100 text-blue-600'
     },
-    { 
-      label: 'Comments', 
-      value: userPosts.reduce((sum, post) => sum + post.comments.length, 0), 
+    {
+      label: 'Comments',
+      value: userPosts.reduce((sum, post) => sum + post.comments.length, 0),
       icon: <MessageCircle className="h-4 w-4" />,
       color: 'bg-purple-100 text-purple-600'
     },
-    { 
-      label: 'Resolved', 
-      value: userPosts.filter(post => post.status === 'completed').length, 
+    {
+      label: 'Resolved',
+      value: userPosts.filter(post => post.status === 'completed').length,
       icon: <CheckCircle className="h-4 w-4" />,
       color: 'bg-green-100 text-green-600'
     }
@@ -176,7 +176,7 @@ const Profile = () => {
       if (media && media.type.startsWith('video/')) {
         mediaType = 'video';
       }
-      
+
       await createPost({
         title,
         description,
@@ -185,14 +185,14 @@ const Profile = () => {
         category,
         location: location || 'Unknown location'
       });
-      
+
       setTitle('');
       setDescription('');
       setMedia(null);
       setPreviewUrl(null);
       setCategory('');
       setShowNewPost(false);
-      
+
       // Refresh user posts
       fetchUserPosts();
     } catch (error) {
@@ -276,14 +276,14 @@ const Profile = () => {
                 <span>Back to Dashboard</span>
               </Link>
               <div className="flex space-x-4">
-                <button 
-                  onClick={() => setShowSettings(true)} 
+                <button
+                  onClick={() => setShowSettings(true)}
                   className="text-gray-600 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
                 >
                   <Settings className="h-5 w-5" />
                 </button>
-                <button 
-                  onClick={logout} 
+                <button
+                  onClick={logout}
                   className="text-gray-600 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
                 >
                   <LogOut className="h-5 w-5" />
@@ -302,29 +302,29 @@ const Profile = () => {
                 </div>
                 <label htmlFor="profile-image-upload" className="absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-md cursor-pointer hover:bg-gray-100 transition-colors duration-200">
                   <Camera className="h-5 w-5 text-indigo-600" />
-                  <input 
-                    type="file" 
-                    id="profile-image-upload" 
-                    className="hidden" 
-                    accept="image/*" 
+                  <input
+                    type="file"
+                    id="profile-image-upload"
+                    className="hidden"
+                    accept="image/*"
                     onChange={handleProfileImageChange}
                   />
                 </label>
               </div>
-              
+
               <div className="flex-1">
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{user?.name}</h1>
                 <p className="text-gray-600 flex items-center">
                   <Mail className="h-4 w-4 mr-1" />
                   {user?.email}
                 </p>
-                
+
                 <div className="mt-3">
                   {isEditingBio ? (
                     <div className="flex flex-col space-y-2">
                       <textarea
                         value={userProfile.bio}
-                        onChange={(e) => setUserProfile({...userProfile, bio: e.target.value})}
+                        onChange={(e) => setUserProfile({ ...userProfile, bio: e.target.value })}
                         className="input-primary h-20"
                         placeholder="Write something about yourself..."
                       />
@@ -357,7 +357,7 @@ const Profile = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
                   {stats.map((stat, index) => (
                     <div key={index} className="flex items-center space-x-2 bg-white rounded-lg p-2 shadow-sm">
@@ -380,13 +380,13 @@ const Profile = () => {
       {/* Settings Modal */}
       <AnimatePresence>
         {showSettings && (
-          <motion.div 
+          <motion.div
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <motion.div 
+            <motion.div
               className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md m-4"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -395,14 +395,14 @@ const Profile = () => {
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-900">Edit Profile</h2>
-                <button 
+                <button
                   onClick={() => setShowSettings(false)}
                   className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-gray-700 text-sm font-medium mb-2">
@@ -415,12 +415,12 @@ const Profile = () => {
                     <input
                       type="text"
                       value={userProfile.name}
-                      onChange={(e) => setUserProfile({...userProfile, name: e.target.value})}
+                      onChange={(e) => setUserProfile({ ...userProfile, name: e.target.value })}
                       className="flex-1 px-3 py-2 focus:outline-none"
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Email
@@ -432,12 +432,12 @@ const Profile = () => {
                     <input
                       type="email"
                       value={userProfile.email}
-                      onChange={(e) => setUserProfile({...userProfile, email: e.target.value})}
+                      onChange={(e) => setUserProfile({ ...userProfile, email: e.target.value })}
                       className="flex-1 px-3 py-2 focus:outline-none"
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Phone Number
@@ -449,13 +449,13 @@ const Profile = () => {
                     <input
                       type="tel"
                       value={userProfile.phone}
-                      onChange={(e) => setUserProfile({...userProfile, phone: e.target.value})}
+                      onChange={(e) => setUserProfile({ ...userProfile, phone: e.target.value })}
                       className="flex-1 px-3 py-2 focus:outline-none"
                       placeholder="Enter your phone number"
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Address
@@ -467,27 +467,27 @@ const Profile = () => {
                     <input
                       type="text"
                       value={userProfile.address}
-                      onChange={(e) => setUserProfile({...userProfile, address: e.target.value})}
+                      onChange={(e) => setUserProfile({ ...userProfile, address: e.target.value })}
                       className="flex-1 px-3 py-2 focus:outline-none"
                       placeholder="Enter your address"
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Bio
                   </label>
                   <textarea
                     value={userProfile.bio}
-                    onChange={(e) => setUserProfile({...userProfile, bio: e.target.value})}
+                    onChange={(e) => setUserProfile({ ...userProfile, bio: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     rows={3}
                     placeholder="Write something about yourself..."
                   />
                 </div>
               </div>
-              
+
               <button
                 onClick={handleSaveProfile}
                 className="w-full mt-6 btn-primary flex items-center justify-center"
@@ -503,13 +503,13 @@ const Profile = () => {
       {/* Delete Confirmation Modal */}
       <AnimatePresence>
         {showDeleteConfirm && (
-          <motion.div 
+          <motion.div
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <motion.div 
+            <motion.div
               className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md m-4"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -548,7 +548,7 @@ const Profile = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <AnimatePresence mode="wait">
           {showNewPost ? (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -557,7 +557,7 @@ const Profile = () => {
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-900">Create New Post</h2>
-                <button 
+                <button
                   onClick={() => {
                     setShowNewPost(false);
                     setTitle('');
@@ -571,7 +571,7 @@ const Profile = () => {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              
+
               <form onSubmit={handleSubmit}>
                 <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-medium mb-2">
@@ -586,7 +586,7 @@ const Profile = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Category
@@ -603,12 +603,12 @@ const Profile = () => {
                     ))}
                   </select>
                 </div>
-                
+
                 <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Location
                   </label>
-                   <div className="flex">
+                  <div className="flex">
                     <input
                       type="text"
                       value={location}
@@ -637,7 +637,7 @@ const Profile = () => {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Description
@@ -651,7 +651,7 @@ const Profile = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="mb-6">
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Media (Image or Video)
@@ -683,7 +683,7 @@ const Profile = () => {
                     )}
                   </label>
                 </div>
-                
+
                 <div className="flex space-x-4">
                   <motion.button
                     type="submit"
@@ -743,7 +743,7 @@ const Profile = () => {
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-lg mb-6">
             <p className="font-medium">{error}</p>
-            <button 
+            <button
               onClick={() => fetchUserPosts()}
               className="mt-2 text-sm font-medium underline"
             >
@@ -756,15 +756,14 @@ const Profile = () => {
         <div className="flex border-b mb-6">
           <button
             onClick={() => setActiveTab('posts')}
-            className={`py-2 px-4 font-medium relative ${
-              activeTab === 'posts'
+            className={`py-2 px-4 font-medium relative ${activeTab === 'posts'
                 ? 'text-indigo-600'
                 : 'text-gray-500 hover:text-gray-700'
-            }`}
+              }`}
           >
             My Posts
             {activeTab === 'posts' && (
-              <motion.div 
+              <motion.div
                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
                 layoutId="activeTab"
               />
@@ -772,15 +771,14 @@ const Profile = () => {
           </button>
           <button
             onClick={() => setActiveTab('activity')}
-            className={`py-2 px-4 font-medium relative ${
-              activeTab === 'activity'
+            className={`py-2 px-4 font-medium relative ${activeTab === 'activity'
                 ? 'text-indigo-600'
                 : 'text-gray-500 hover:text-gray-700'
-            }`}
+              }`}
           >
             Activity
             {activeTab === 'activity' && (
-              <motion.div 
+              <motion.div
                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
                 layoutId="activeTab"
               />
@@ -788,15 +786,14 @@ const Profile = () => {
           </button>
           <button
             onClick={() => setActiveTab('achievements')}
-            className={`py-2 px-4 font-medium relative ${
-              activeTab === 'achievements'
+            className={`py-2 px-4 font-medium relative ${activeTab === 'achievements'
                 ? 'text-indigo-600'
                 : 'text-gray-500 hover:text-gray-700'
-            }`}
+              }`}
           >
             Achievements
             {activeTab === 'achievements' && (
-              <motion.div 
+              <motion.div
                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
                 layoutId="activeTab"
               />
@@ -817,27 +814,27 @@ const Profile = () => {
               {userPosts.length > 0 ? (
                 <div className="space-y-6 mb-8">
                   {userPosts.map((post) => (
-                    <motion.div 
-                      key={post._id} 
+                    <motion.div
+                      key={post._id}
                       className="bg-white rounded-xl shadow-sm overflow-hidden card-hover"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3 }}
                     >
                       <div className="flex flex-col md:flex-row">
-                        {post.mediaUrl && (
+                        {post.media && (
                           <div className="md:w-1/3 relative">
                             {post.mediaType === 'image' ? (
                               <img
-                                src={post.mediaUrl}
+                                src={`data:${post.media.contentType};base64,${post.media.data.toString('base64')}`}
                                 alt={post.title}
                                 className="w-full h-full object-cover aspect-video md:aspect-auto"
                               />
                             ) : (
                               <video
-                                src={post.mediaUrl}
-                                className="w-full h-full object-cover aspect-video md:aspect-auto"
+                                src={`data:${post.media.contentType};base64,${post.media.data.toString('base64')}`}
                                 controls
+                                className="w-full h-full object-cover aspect-video md:aspect-auto"
                               />
                             )}
                             <div className="absolute top-2 right-2 flex space-x-1">
@@ -862,6 +859,7 @@ const Profile = () => {
                             </div>
                           </div>
                         )}
+
                         <div className="p-4 md:w-2/3 flex flex-col">
                           <div className="flex justify-between items-start mb-2">
                             <h3 className="text-lg font-semibold text-gray-900">{post.title}</h3>
@@ -870,7 +868,7 @@ const Profile = () => {
                               <span className="ml-1 capitalize">{post.status.replace('_', ' ')}</span>
                             </span>
                           </div>
-                          
+
                           <div className="flex flex-wrap gap-2 mb-2">
                             {post.category && (
                               <span className="category-badge">
@@ -884,9 +882,9 @@ const Profile = () => {
                               </span>
                             )}
                           </div>
-                          
+
                           <p className="text-gray-600 text-sm mb-3">{post.description}</p>
-                          
+
                           <div className="mt-auto">
                             <div className="flex items-center justify-between border-t pt-3">
                               <div className="flex items-center space-x-4">
@@ -908,7 +906,7 @@ const Profile = () => {
                                 })}</span>
                               </div>
                             </div>
-                            
+
                             <div className="flex mt-3">
                               <button
                                 onClick={() => setExpandedPost(expandedPost === post._id ? null : post._id)}
@@ -927,7 +925,7 @@ const Profile = () => {
                                 )}
                               </button>
                             </div>
-                            
+
                             <AnimatePresence>
                               {expandedPost === post._id && (
                                 <motion.div
@@ -998,7 +996,7 @@ const Profile = () => {
               )}
             </motion.div>
           )}
-          
+
           {activeTab === 'activity' && (
             <motion.div
               key="activity-tab"
@@ -1009,7 +1007,7 @@ const Profile = () => {
               className="bg-white rounded-xl shadow-sm p-6"
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
-              
+
               {userPosts.length > 0 ? (
                 <div className="space-y-4">
                   {userPosts.map((post) => (
@@ -1033,7 +1031,7 @@ const Profile = () => {
                       </div>
                     </div>
                   ))}
-                  
+
                   {userPosts.flatMap(post => post.votes.map((vote, index) => (
                     <div key={`${post._id}-vote-${index}`} className="flex items-start space-x-3 pb-4 border-b border-gray-100">
                       <div className="p-2 rounded-full bg-blue-100 text-blue-800">
@@ -1055,7 +1053,7 @@ const Profile = () => {
                       </div>
                     </div>
                   )))}
-                  
+
                   {userPosts.flatMap(post => post.comments.map((comment, index) => (
                     <div key={`${post._id}-comment-${index}`} className="flex items-start space-x-3 pb-4 border-b border-gray-100">
                       <div className="p-2 rounded-full bg-purple-100 text-purple-800">
@@ -1088,7 +1086,7 @@ const Profile = () => {
               )}
             </motion.div>
           )}
-          
+
           {activeTab === 'achievements' && (
             <motion.div
               key="achievements-tab"
@@ -1099,7 +1097,7 @@ const Profile = () => {
               className="bg-white rounded-xl shadow-sm p-6"
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Achievements</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className={`p-4 rounded-xl border ${userPosts.length > 0 ? 'border-indigo-200 bg-indigo-50' : 'border-gray-200 bg-gray-50 opacity-50'}`}>
                   <div className="flex items-center mb-3">
@@ -1115,7 +1113,7 @@ const Profile = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className={`p-4 rounded-xl border ${userPosts.length >= 5 ? 'border-indigo-200 bg-indigo-50' : 'border-gray-200 bg-gray-50 opacity-50'}`}>
                   <div className="flex items-center mb-3">
                     <div className={`p-2 rounded-full ${userPosts.length >= 5 ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-400'}`}>
@@ -1130,7 +1128,7 @@ const Profile = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className={`p-4 rounded-xl border ${userPosts.reduce((sum, post) => sum + post.votes.length, 0) >= 10 ? 'border-indigo-200 bg-indigo-50' : 'border-gray-200 bg-gray-50 opacity-50'}`}>
                   <div className="flex items-center mb-3">
                     <div className={`p-2 rounded-full ${userPosts.reduce((sum, post) => sum + post.votes.length, 0) >= 10 ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-400'}`}>
@@ -1145,7 +1143,7 @@ const Profile = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className={`p-4 rounded-xl border ${userPosts.filter(post => post.status === 'completed').length >= 1 ? 'border-indigo-200 bg-indigo-50' : 'border-gray-200 bg-gray-50 opacity-50'}`}>
                   <div className="flex items-center mb-3">
                     <div className={`p-2 rounded-full ${userPosts.filter(post => post.status === 'completed').length >= 1 ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-400'}`}>
@@ -1160,7 +1158,7 @@ const Profile = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className={`p-4 rounded-xl border ${userPosts.reduce((sum, post) => sum + post.comments.length, 0) >= 5 ? 'border-indigo-200 bg-indigo-50' : 'border-gray-200 bg-gray-50 opacity-50'}`}>
                   <div className="flex items-center mb-3">
                     <div className={`p-2 rounded-full ${userPosts.reduce((sum, post) => sum + post.comments.length, 0) >= 5 ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-400'}`}>
@@ -1175,7 +1173,7 @@ const Profile = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="p-4 rounded-xl border border-gray-200 bg-gray-50 opacity-50">
                   <div className="flex items-center mb-3">
                     <div className="p-2 rounded-full bg-gray-100 text-gray-400">
@@ -1185,11 +1183,11 @@ const Profile = () => {
                   </div>
                   <p className="text-sm text-gray-600">Complete all other achievements</p>
                   <div className="mt-2 text-xs text-gray-500">
-                    {userPosts.length > 0 && 
-                     userPosts.length >= 5 && 
-                     userPosts.reduce((sum, post) => sum + post.votes.length, 0) >= 10 && 
-                     userPosts.filter(post => post.status === 'completed').length >= 1 && 
-                     userPosts.reduce((sum, post) => sum + post.comments.length, 0) >= 5 ? (
+                    {userPosts.length > 0 &&
+                      userPosts.length >= 5 &&
+                      userPosts.reduce((sum, post) => sum + post.votes.length, 0) >= 10 &&
+                      userPosts.filter(post => post.status === 'completed').length >= 1 &&
+                      userPosts.reduce((sum, post) => sum + post.comments.length, 0) >= 5 ? (
                       <span className="text-indigo-600 font-medium">Completed! You're a champion!</span>
                     ) : (
                       <span>Complete other achievements first</span>
