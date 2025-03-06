@@ -46,6 +46,13 @@ interface NewPost {
   location: string;
 }
 
+interface UpdatePost {
+  title: string;
+  description: string;
+  category: string;
+  location: string;
+}
+
 interface PostContextType {
   posts: Post[];
   userPosts: Post[];
@@ -54,6 +61,8 @@ interface PostContextType {
   fetchPosts: () => Promise<void>;
   fetchUserPosts: () => Promise<void>;
   createPost: (postData: NewPost) => Promise<Post>;
+  updatePost: (postId: string, postData: UpdatePost) => Promise<Post>;
+  deletePost: (postId: string) => Promise<void>;
   addComment: (postId: string, text: string) => Promise<Comment>;
   votePost: (postId: string) => Promise<Post>;
   updatePostStatus: (postId: string, status: Post['status']) => Promise<Post>;
@@ -178,6 +187,66 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err) {
       console.error('Error creating post:', err);
       setError('Failed to create post. Please try again later.');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update a post
+  const updatePost = async (postId: string, postData: UpdatePost): Promise<Post> => {
+    if (!isAuthenticated) {
+      throw new Error('You must be logged in to update a post');
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.patch(`${API_URL}/posts/${postId}`, postData);
+      
+      const updatedPost = response.data;
+      
+      // Update posts state
+      setPosts(prevPosts => 
+        prevPosts.map(post => 
+          post._id === postId ? updatedPost : post
+        )
+      );
+      
+      // Update user posts if applicable
+      setUserPosts(prevPosts => 
+        prevPosts.map(post => 
+          post._id === postId ? updatedPost : post
+        )
+      );
+      
+      return updatedPost;
+    } catch (err) {
+      console.error('Error updating post:', err);
+      setError('Failed to update post. Please try again later.');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete a post
+  const deletePost = async (postId: string): Promise<void> => {
+    if (!isAuthenticated) {
+      throw new Error('You must be logged in to delete a post');
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      await axios.delete(`${API_URL}/posts/${postId}`);
+      
+      // Remove post from states
+      setPosts(prevPosts => prevPosts.filter(post => post._id !== postId));
+      setUserPosts(prevPosts => prevPosts.filter(post => post._id !== postId));
+    } catch (err) {
+      console.error('Error deleting post:', err);
+      setError('Failed to delete post. Please try again later.');
       throw err;
     } finally {
       setLoading(false);
@@ -359,6 +428,8 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fetchPosts,
         fetchUserPosts,
         createPost,
+        updatePost,
+        deletePost,
         addComment,
         votePost,
         updatePostStatus

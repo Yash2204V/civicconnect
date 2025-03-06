@@ -121,6 +121,77 @@ router.post('/', auth, upload.single('media'), async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+// Update post
+router.patch('/:id', auth, async (req, res) => {
+  try {
+    const { title, description, category, location } = req.body;
+    
+    // Find post and verify ownership
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    
+    // Check if user owns the post
+    if (post.user.toString() != req.user.userId) {
+      return res.status(403).json({ message: 'Not authorized to update this post' });
+    }
+    
+    // Update post
+    const updatedPost = await Post.findByIdAndUpdate(
+      req.params.id,
+      { title, description, category, location },
+      { new: true }
+    ).populate('user', 'name email');
+    
+    // Get comments
+    const comments = await Comment.find({ post: updatedPost._id }).populate('user', 'name');
+    
+    // Convert media to base64 if exists
+    const postObj = updatedPost.toObject();
+    if (postObj.media && postObj.media.data) {
+      const base64 = Buffer.from(postObj.media.data).toString('base64');
+      const mediaUrl = `data:${postObj.media.contentType};base64,${base64}`;
+      postObj.mediaUrl = mediaUrl;
+    }
+    
+    res.json({
+      ...postObj,
+      comments
+    });
+  } catch (error) {
+    console.error('Error updating post:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete post
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    // Find post and verify ownership
+    const post = await Post.findById(req.params.id);
+    
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    
+    // Check if user owns the post
+    if (post.user.toString() != req.user.userId) {
+      return res.status(403).json({ message: 'Not authorized to delete this post' });
+    }
+    
+    // Delete associated comments and votes
+    await Comment.deleteMany({ post: req.params.id });
+    await Vote.deleteMany({ post: req.params.id });
+    
+    // Delete the post
+    await Post.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 // Update post status (admin only)
 router.patch('/:id/status', adminAuth, async (req, res) => {
