@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Upload,
   Loader,
+  X,
   Settings,
   LogOut,
   ArrowLeft,
@@ -61,7 +62,7 @@ const categories = [
 const Profile = () => {
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
-  const { userPosts, loading, error, fetchUserPosts, createPost } = usePosts();
+  const { userPosts, loading, error, fetchUserPosts, createPost, updatePost, deletePost } = usePosts();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -85,6 +86,7 @@ const Profile = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [isEditingBio, setIsEditingBio] = useState(false);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
 
   // Stats for the profile
   const stats: Stat[] = [
@@ -210,17 +212,60 @@ const Profile = () => {
     setIsEditingBio(false);
   };
 
-  const handleDeletePost = (postId: string) => {
-    setPostToDelete(postId);
-    setShowDeleteConfirm(true);
-  };
-
   const confirmDeletePost = () => {
     // In a real app, this would delete the post
     // For now, we'll just show a success message
     alert('Post deleted successfully!');
     setShowDeleteConfirm(false);
     setPostToDelete(null);
+  };
+
+  const handleUpdatePost = async () => {
+    if (!editingPostId) return;
+
+    try {
+      await updatePost(editingPostId, {
+        title,
+        description,
+        category,
+        location
+      });
+
+      setShowNewPost(false);
+      setEditingPostId(null);
+      // Reset form
+      setTitle('');
+      setDescription('');
+      setCategory('');
+      setLocation('');
+    } catch (error) {
+      console.error('Error updating post:', error);
+    }
+  };
+
+  const handleEditClick = (post: any) => {
+    setEditingPostId(post._id);
+    setTitle(post.title);
+    setDescription(post.description);
+    setCategory(post.category);
+    setLocation(post.location);
+    setShowNewPost(true);
+  };
+
+  const handleDeleteClick = (postId: string) => {
+    setPostToDelete(postId);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeletePost = async () => {
+    if (!postToDelete) return;
+    try {
+      await deletePost(postToDelete);
+      setShowDeleteConfirm(false);
+      setPostToDelete(null);
+    } catch (error) {
+      console.error('Error deleting post:', error);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -504,40 +549,146 @@ const Profile = () => {
       <AnimatePresence>
         {showDeleteConfirm && (
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
           >
             <motion.div
-              className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md m-4"
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-xl p-6 max-w-md w-full"
             >
-              <div className="text-center">
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                  <Trash2 className="h-6 w-6 text-red-600" />
+              <div className="flex items-center justify-center mb-4">
+                <div className="bg-red-100 rounded-full p-3">
+                  <AlertTriangle className="h-6 w-6 text-red-600" />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Delete Post</h3>
-                <p className="text-sm text-gray-500 mb-6">
-                  Are you sure you want to delete this post? This action cannot be undone.
-                </p>
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="flex-1 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={confirmDeletePost}
-                    className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                  >
-                    Delete
-                  </button>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 text-center mb-2">
+                Delete Post
+              </h3>
+              <p className="text-gray-500 text-center mb-6">
+                Are you sure you want to delete this post? This action cannot be undone.
+              </p>
+              <div className="flex justify-center space-x-3">
+                <button
+                  onClick={() => postToDelete && handleDeletePost()}
+                  className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors duration-200"
+                >
+                  Delete
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setPostToDelete(null);
+                  }}
+                  className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Post Modal */}
+      <AnimatePresence>
+        {showNewPost && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-xl p-6 max-w-lg w-full"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-gray-900">
+                  {editingPostId ? 'Edit Post' : 'New Post'}
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowNewPost(false);
+                    setEditingPostId(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <input
+                    type="text"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowNewPost(false);
+                    setEditingPostId(null);
+                  }}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdatePost}
+                  className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
+                >
+                  Save Changes
+                </button>
               </div>
             </motion.div>
           </motion.div>
@@ -757,8 +908,8 @@ const Profile = () => {
           <button
             onClick={() => setActiveTab('posts')}
             className={`py-2 px-4 font-medium relative ${activeTab === 'posts'
-                ? 'text-indigo-600'
-                : 'text-gray-500 hover:text-gray-700'
+              ? 'text-indigo-600'
+              : 'text-gray-500 hover:text-gray-700'
               }`}
           >
             My Posts
@@ -772,8 +923,8 @@ const Profile = () => {
           <button
             onClick={() => setActiveTab('activity')}
             className={`py-2 px-4 font-medium relative ${activeTab === 'activity'
-                ? 'text-indigo-600'
-                : 'text-gray-500 hover:text-gray-700'
+              ? 'text-indigo-600'
+              : 'text-gray-500 hover:text-gray-700'
               }`}
           >
             Activity
@@ -787,8 +938,8 @@ const Profile = () => {
           <button
             onClick={() => setActiveTab('achievements')}
             className={`py-2 px-4 font-medium relative ${activeTab === 'achievements'
-                ? 'text-indigo-600'
-                : 'text-gray-500 hover:text-gray-700'
+              ? 'text-indigo-600'
+              : 'text-gray-500 hover:text-gray-700'
               }`}
           >
             Achievements
@@ -823,35 +974,29 @@ const Profile = () => {
                     >
                       <div className="flex flex-col md:flex-row">
                         {post.media && (
-                          <div className="md:w-1/3 relative">
+                          <div className="aspect-video relative">
                             {post.mediaType === 'image' ? (
                               <img
                                 src={`data:${post.media.contentType};base64,${post.media.data.toString('base64')}`}
                                 alt={post.title}
-                                className="w-full h-full object-cover aspect-video md:aspect-auto"
+                                className="w-full h-full object-cover"
                               />
                             ) : (
                               <video
                                 src={`data:${post.media.contentType};base64,${post.media.data.toString('base64')}`}
                                 controls
-                                className="w-full h-full object-cover aspect-video md:aspect-auto"
+                                className="w-full h-full object-cover"
                               />
                             )}
                             <div className="absolute top-2 right-2 flex space-x-1">
                               <button
-                                onClick={() => handleDeletePost(post._id)}
+                                onClick={() => handleDeleteClick(post._id)}
                                 className="p-1.5 bg-white bg-opacity-80 rounded-full text-red-500 hover:text-red-700 hover:bg-opacity-100 transition-colors duration-200 shadow-sm"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
                               <button
-                                onClick={() => {
-                                  setTitle(post.title);
-                                  setDescription(post.description);
-                                  setCategory(post.category);
-                                  setLocation(post.location);
-                                  setShowNewPost(true);
-                                }}
+                                onClick={() => handleEditClick(post)}
                                 className="p-1.5 bg-white bg-opacity-80 rounded-full text-indigo-500 hover:text-indigo-700 hover:bg-opacity-100 transition-colors duration-200 shadow-sm"
                               >
                                 <Edit className="h-4 w-4" />
