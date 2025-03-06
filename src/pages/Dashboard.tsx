@@ -1277,17 +1277,17 @@ const Dashboard = () => {
                   >
                     <div className="flex flex-col md:flex-row">
                       {/* Media (if available) */}
-                      {post.mediaUrl && (
+                      {post.media && (
                         <div className="md:w-1/3 relative cinematic-gradient-overlay">
                           {post.mediaType === 'image' ? (
                             <img
-                              src={post.mediaUrl}
+                              src={`data:${post.media.contentType};base64,${post.media.data.toString('base64')}`}
                               alt={post.title}
                               className="w-full h-48 md:h-full object-cover"
                             />
                           ) : (
                             <video
-                              src={post.mediaUrl}
+                              src={`data:${post.media.contentType};base64,${post.media.data.toString('base64')}`}
                               controls
                               className="w-full h-48 md:h-full object-cover"
                             />
