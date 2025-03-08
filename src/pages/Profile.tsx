@@ -48,15 +48,16 @@ interface Stat {
 }
 
 const categories = [
-  'Infrastructure & Public Services',
-  'Environmental Concerns',
-  'Law & Order Issues',
-  'Housing & Urban Development',
-  'Education & Healthcare',
-  'Unemployment & Economic Issues',
-  'Digital & Technological Issues',
-  'Governance & Political Issues',
-  'Social Issues'
+  'Violent Crimes',
+  'Property Crimes',
+  'Cyber Crimes',
+  'Financial & White-Collar Crimes',
+  'Drug-Related Crimes',
+  'Sexual Crimes',
+  'Public Safety & Order Violations',
+  'Traffic & Transportation Violations',
+  'Environmental Crimes',
+  'Terrorism & National Security'
 ];
 
 const Profile = () => {
@@ -141,7 +142,16 @@ const Profile = () => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           // This would normally be converted to an address using a geocoding service
-          setLocation(`${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
+          const { latitude, longitude } = position.coords;
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+            .then(response => response.json())
+            .then(data => {
+              setLocation(data.display_name);
+            })
+            .catch(error => {
+              console.error("Error fetching location name:", error);
+              setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+            });
         },
         (error) => {
           console.error("Error getting location:", error);
@@ -593,7 +603,7 @@ const Profile = () => {
         )}
       </AnimatePresence>
 
-      {/* Edit Post Modal */}
+      {/* Edit Post Modal */} 
       <AnimatePresence>
         {showNewPost && (
           <motion.div
@@ -775,7 +785,17 @@ const Profile = () => {
                         if (navigator.geolocation) {
                           navigator.geolocation.getCurrentPosition(
                             (position) => {
-                              setLocation(`${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
+                              // This would normally be converted to an address using a geocoding service
+                              const { latitude, longitude } = position.coords;
+                              fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                  setLocation(data.display_name);
+                                })
+                                .catch(error => {
+                                  console.error("Error fetching location name:", error);
+                                  setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+                                });
                             },
                             (error) => {
                               console.error("Error getting location:", error);

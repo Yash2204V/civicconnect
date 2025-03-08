@@ -67,15 +67,16 @@ interface Post {
 }
 
 const categories = [
-  'Infrastructure & Public Services',
-  'Environmental Concerns',
-  'Law & Order Issues',
-  'Housing & Urban Development',
-  'Education & Healthcare',
-  'Unemployment & Economic Issues',
-  'Digital & Technological Issues',
-  'Governance & Political Issues',
-  'Social Issues'
+  'Violent Crimes',
+  'Property Crimes',
+  'Cyber Crimes',
+  'Financial & White-Collar Crimes',
+  'Drug-Related Crimes',
+  'Sexual Crimes',
+  'Public Safety & Order Violations',
+  'Traffic & Transportation Violations',
+  'Environmental Crimes',
+  'Terrorism & National Security'
 ];
 
 const Dashboard = () => {
@@ -121,7 +122,16 @@ const Dashboard = () => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           // This would normally be converted to an address using a geocoding service
-          setLocation(`${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
+          const { latitude, longitude } = position.coords;
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+            .then(response => response.json())
+            .then(data => {
+              setLocation(data.display_name);
+            })
+            .catch(error => {
+              console.error("Error fetching location name:", error);
+              setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+            });
         },
         (error) => {
           console.error("Error getting location:", error);
@@ -134,6 +144,34 @@ const Dashboard = () => {
       setLocation("Unknown location");
     }
   }, []);
+
+
+  useEffect(() => {
+    // Get user's location when creating a new post
+    if (showNewPost && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // This would normally be converted to an address using a geocoding service
+          const { latitude, longitude } = position.coords;
+          console.log(latitude, longitude);
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+            .then(response => response.json())
+            .then(data => {
+              setLocation(data.display_name);
+            })
+            .catch(error => {
+              console.error("Error fetching location name:", error);
+              setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+            });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+        }
+      );
+    }
+  }, []);
+
+
 
   useEffect(() => {
     if (user) {
@@ -419,8 +457,8 @@ const Dashboard = () => {
 
       {/* Navigation */}
       <nav className={`fixed w-full top-0 z-40 transition-all duration-300 ${scrollPosition > 50
-          ? 'bg-white bg-opacity-90 backdrop-blur-md shadow-md'
-          : 'bg-transparent'
+        ? 'bg-white bg-opacity-90 backdrop-blur-md shadow-md'
+        : 'bg-transparent'
         }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -440,8 +478,8 @@ const Dashboard = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={`pl-10 pr-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 w-60 ${scrollPosition > 50
-                      ? 'bg-indigo-50 border border-indigo-100'
-                      : 'bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 text-white placeholder-white placeholder-opacity-80'
+                    ? 'bg-indigo-50 border border-indigo-100'
+                    : 'bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 text-white placeholder-white placeholder-opacity-80'
                     }`}
                 />
               </div>
@@ -449,8 +487,8 @@ const Dashboard = () => {
               <button
                 onClick={handleRefresh}
                 className={`p-2 rounded-full transition-colors duration-200 ${scrollPosition > 50
-                    ? 'text-indigo-500 hover:bg-indigo-50'
-                    : 'text-white hover:bg-white hover:bg-opacity-20'
+                  ? 'text-indigo-500 hover:bg-indigo-50'
+                  : 'text-white hover:bg-white hover:bg-opacity-20'
                   }`}
               >
                 <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
@@ -461,8 +499,8 @@ const Dashboard = () => {
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
                   className={`p-2 rounded-full transition-colors duration-200 ${scrollPosition > 50
-                      ? 'text-indigo-500 hover:bg-indigo-50'
-                      : 'text-white hover:bg-white hover:bg-opacity-20'
+                    ? 'text-indigo-500 hover:bg-indigo-50'
+                    : 'text-white hover:bg-white hover:bg-opacity-20'
                     }`}
                 >
                   <Bell className="h-5 w-5" />
@@ -479,9 +517,9 @@ const Dashboard = () => {
                         <div key={notification.id} className="p-4 border-b hover:bg-gray-50 transition-colors duration-200">
                           <div className="flex items-start">
                             <div className={`p-2 rounded-full mr-3 ${notification.type === 'vote' ? 'bg-indigo-100 text-indigo-600' :
-                                notification.type === 'comment' ? 'bg-green-100 text-green-600' :
-                                  notification.type === 'status' ? 'bg-amber-100 text-amber-600' :
-                                    'bg-blue-100 text-blue-600'
+                              notification.type === 'comment' ? 'bg-green-100 text-green-600' :
+                                notification.type === 'status' ? 'bg-amber-100 text-amber-600' :
+                                  'bg-blue-100 text-blue-600'
                               }`}>
                               {notification.type === 'vote' ? <ThumbsUp className="h-5 w-5" /> :
                                 notification.type === 'comment' ? <MessageCircle className="h-5 w-5" /> :
@@ -748,8 +786,8 @@ const Dashboard = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${filter === status
-                      ? 'cinematic-button text-white shadow-md'
-                      : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    ? 'cinematic-button text-white shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                     } transition-all duration-200`}
                 >
                   {status === 'all' ? 'All Issues' : getStatusText(status as Post['status'])}
@@ -946,7 +984,17 @@ const Dashboard = () => {
                         if (navigator.geolocation) {
                           navigator.geolocation.getCurrentPosition(
                             (position) => {
-                              setLocation(`${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
+                              // This would normally be converted to an address using a geocoding service
+                              const { latitude, longitude } = position.coords;
+                              fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                  setLocation(data.display_name);
+                                })
+                                .catch(error => {
+                                  console.error("Error fetching location name:", error);
+                                  setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+                                });
                             },
                             (error) => {
                               console.error("Error getting location:", error);
@@ -1154,8 +1202,8 @@ const Dashboard = () => {
                         <motion.button
                           onClick={() => handleVote(post._id)}
                           className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg ${post.votes.includes(userId)
-                              ? 'bg-indigo-100 text-indigo-600'
-                              : 'text-gray-600 hover:bg-gray-100'
+                            ? 'bg-indigo-100 text-indigo-600'
+                            : 'text-gray-600 hover:bg-gray-100'
                             } transition-colors duration-200`}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.9 }}
@@ -1343,8 +1391,8 @@ const Dashboard = () => {
                               handleVote(post._id);
                             }}
                             className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg ${post.votes.includes(userId)
-                                ? 'bg-indigo-100 text-indigo-600'
-                                : 'text-gray-600 hover:bg-gray-100'
+                              ? 'bg-indigo-100 text-indigo-600'
+                              : 'text-gray-600 hover:bg-gray-100'
                               } transition-colors duration-200`}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.9 }}
