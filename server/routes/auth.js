@@ -1,7 +1,9 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import User from '../models/User.js';
 import { auth } from '../middleware/auth.js';
+import { sendVerificationEmail } from '../utils/emailService.js';
 
 const router = express.Router();
 
@@ -16,11 +18,17 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
     // Create new user
-    user = await User.create({
+    user = new User({
       name,
       email,
-      password
+      password,
+      verificationToken,
+      verificationTokenExpires
     });
 
     // Hash password
@@ -30,13 +38,24 @@ router.post('/register', async (req, res) => {
     // Save user to MongoDB
     await user.save();
 
-    // Return user ID for simple authentication
-    res.json({ 
+    // Send verification email
+    try {
+      await sendVerificationEmail(email, verificationToken);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Delete the user if email sending fails
+      await User.findByIdAndDelete(user._id);
+      return res.status(500).json({ message: 'Failed to send verification email' });
+    }
+
+    // Return user info
+    res.status(201).json({ 
       userId: user._id, 
       name: user.name, 
       email: user.email, 
       role: user.role,
-      message: 'Registration successful' 
+      isVerified: user.isVerified,
+      message: 'Registration successful. Please check your email to verify your account.' 
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -45,6 +64,67 @@ router.post('/register', async (req, res) => {
       error: error.message,
       stack: process.env.NODE_ENV === 'production' ? null : error.stack
     });
+  }
+});
+
+// Verify email
+router.get('/verify/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    // Find user with matching token that hasn't expired
+    const user = await User.findOne({
+      verificationToken: token,
+      verificationTokenExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired verification token' });
+    }
+
+    // Update user verification status
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
+    await user.save();
+
+    // Redirect to frontend with success message
+    res.redirect(`${process.env.FRONTEND_URL}/login?verified=true`);
+  } catch (error) {
+    console.error('Verification error:', error);
+    res.status(500).json({ message: 'Server error during verification' });
+  }
+});
+
+// Resend verification email
+router.post('/resend-verification', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: 'Email is already verified' });
+    }
+
+    // Generate new verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpires = verificationTokenExpires;
+    await user.save();
+
+    // Send new verification email
+    await sendVerificationEmail(email, verificationToken);
+
+    res.json({ message: 'Verification email resent successfully' });
+  } catch (error) {
+    console.error('Error resending verification:', error);
+    res.status(500).json({ message: 'Failed to resend verification email' });
   }
 });
 
@@ -60,6 +140,7 @@ router.post('/login', async (req, res) => {
         name: 'Demo User', 
         email: 'user@example.com', 
         role: 'user',
+        isVerified: true,
         message: 'Login successful' 
       });
     }
@@ -70,6 +151,7 @@ router.post('/login', async (req, res) => {
         name: 'Admin User', 
         email: 'admin@example.com', 
         role: 'admin',
+        isVerified: true,
         message: 'Login successful' 
       });
     }
@@ -80,18 +162,27 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    // Check if email is verified
+    if (!user.isVerified) {
+      return res.status(403).json({ 
+        message: 'Please verify your email before logging in',
+        needsVerification: true
+      });
+    }
+
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Return user info for simple authentication
+    // Return user info
     res.json({ 
       userId: user._id, 
       name: user.name, 
       email: user.email, 
       role: user.role,
+      isVerified: user.isVerified,
       message: 'Login successful' 
     });
   } catch (error) {
@@ -115,25 +206,6 @@ router.get('/me', auth, async (req, res) => {
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Test route to check database connection
-router.get('/test-db', async (req, res) => {
-  try {
-    // Try to count users to verify DB connection
-    const count = await User.countDocuments();
-    res.json({ 
-      message: 'Database connection successful', 
-      userCount: count,
-      mongoStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
-    });
-  } catch (error) {
-    console.error('Database test error:', error);
-    res.status(500).json({ 
-      message: 'Database connection error', 
-      error: error.message 
-    });
   }
 });
 

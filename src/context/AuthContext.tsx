@@ -6,6 +6,7 @@ interface User {
   name: string;
   email: string;
   role: string;
+  isVerified: boolean;
 }
 
 interface AuthContextType {
@@ -15,6 +16,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
+  resendVerification: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,13 +42,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-
       const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      
+      if (!response.data.isVerified) {
+        throw new Error('Please verify your email before logging in');
+      }
+
       const userData = {
         _id: response.data.userId,
         name: response.data.name,
         email: response.data.email,
-        role: response.data.role
+        role: response.data.role,
+        isVerified: response.data.isVerified
       };
       
       // Save user data to localStorage
@@ -57,9 +64,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setUser(userData);
       setIsAuthenticated(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      throw new Error('Login failed');
+      if (error.response?.data?.needsVerification) {
+        throw new Error('Please verify your email before logging in');
+      }
+      throw new Error(error.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -68,29 +78,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (name: string, email: string, password: string) => {
     setLoading(true);
     try {
-
-      // If not using demo credentials, try to register with the API
       const response = await axios.post('http://localhost:5000/api/auth/register', { name, email, password });
-      const userData = {
-        _id: response.data.userId,
-        name: response.data.name,
-        email: response.data.email,
-        role: response.data.role
-      };
-
-      // Save user data to localStorage
-      localStorage.setItem('userData', JSON.stringify(userData));
       
-      // Set authorization header for API requests
-      axios.defaults.headers.common['Authorization'] = userData._id;
-      
-      setUser(userData);
-      setIsAuthenticated(true);
-    } catch (error) {
+      // Don't automatically log in after registration - require email verification
+      return response.data;
+    } catch (error: any) {
       console.error('Registration error:', error);
-      throw new Error('Registration failed');
+      throw new Error(error.response?.data?.message || 'Registration failed');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const resendVerification = async (email: string) => {
+    try {
+      await axios.post('http://localhost:5000/api/auth/resend-verification', { email });
+    } catch (error: any) {
+      console.error('Resend verification error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to resend verification email');
     }
   };
 
@@ -106,7 +111,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isAuthenticated, 
+      login, 
+      register, 
+      logout, 
+      loading,
+      resendVerification 
+    }}>
       {children}
     </AuthContext.Provider>
   );
