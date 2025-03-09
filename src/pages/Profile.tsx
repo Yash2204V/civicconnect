@@ -625,138 +625,136 @@ const Profile = () => {
         )}
       </AnimatePresence>
 
-      {/* Edit Post Modal */}
       <AnimatePresence>
-        {showNewPost && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+  {showNewPost && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        className="bg-white rounded-xl p-6 max-w-lg w-full max-h-screen overflow-y-auto"
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-bold text-gray-900">
+            {editingPostId ? 'Edit Post' : 'New Post'}
+          </h3>
+          <button
+            onClick={() => {
+              setShowNewPost(false);
+              setEditingPostId(null);
+            }}
+            className="text-gray-400 hover:text-gray-600"
           >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-xl p-6 max-w-lg w-full"
-            >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-bold text-gray-900">
-                    {editingPostId ? 'Edit Post' : 'New Post'}
-                  </h3>
-                  <button
-                    onClick={() => {
-                      setShowNewPost(false);
-                      setEditingPostId(null);
-                    }}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Title
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+          </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  />
-                </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+          </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  />
-                </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category
+            </label>
+            <input
+              type="text"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+          </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Category
-                  </label>
-                  <input
-                    type="text"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  />
-                </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Location
+            </label>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+          </div>
+        </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  />
-                </div>
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-medium mb-2">
+            Media (Image or Video)
+          </label>
+          <input
+            type="file"
+            accept="image/*,video/*"
+            onChange={handleMediaChange}
+            className="hidden"
+            id="media"
+          />
+          <label
+            htmlFor="media"
+            className="cursor-pointer flex items-center justify-center border-2 border-dashed border-indigo-200 rounded-lg p-6 hover:border-indigo-400 transition-colors duration-200"
+          >
+            {previewUrl ? (
+              <div className="text-center">
+                <img src={previewUrl} alt="Preview" className="max-h-64 rounded-lg" />
               </div>
-
-              <div className="mb-6">
-                <label className="block text-gray-700 text-sm font-medium mb-2">
-                  Media (Image or Video)
-                </label>
-                <input
-                  type="file"
-                  accept="image/*,video/*"
-                  onChange={handleMediaChange}
-                  className="hidden"
-                  id="media"
-                />
-                <label
-                  htmlFor="media"
-                  className="cursor-pointer flex items-center justify-center border-2 border-dashed border-indigo-200 rounded-lg p-6 hover:border-indigo-400 transition-colors duration-200"
-                >
-                  {previewUrl ? (
-                    <div className="text-center">
-                      <img src={previewUrl} alt="Preview" className="max-h-64 rounded-lg" />
-                    </div>
-                  ) : (
-                    <div className="text-center">
-                      <Camera className="mx-auto h-12 w-12 text-indigo-300" /> 
-                      <p className="mt-2 text-sm text-indigo-500">
-                        Click to upload media (optional)
-                      </p>
-                    </div>
-                  )}
-                </label>
+            ) : (
+              <div className="text-center">
+                <Camera className="mx-auto h-12 w-12 text-indigo-300" /> 
+                <p className="mt-2 text-sm text-indigo-500">
+                  Click to upload media (optional)
+                </p>
               </div>
+            )}
+          </label>
+        </div>
 
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  onClick={() => {
-                    setShowNewPost(false);
-                    setEditingPostId(null);
-                  }}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
-                >
-                  Cancel
-                </button>
-                <button onClick={handleUpdatePost}
-                  className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
-                >
-                  Save Changes
-                </button>
-              </div>
-
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <div className="mt-6 flex justify-end space-x-3">
+          <button
+            onClick={() => {
+              setShowNewPost(false);
+              setEditingPostId(null);
+            }}
+            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleUpdatePost}
+            className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
+          >
+            Save Changes
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
       {/* Content */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
