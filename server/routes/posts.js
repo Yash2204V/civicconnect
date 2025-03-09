@@ -10,7 +10,7 @@ const router = express.Router();
 
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   limits: {
     fileSize: 10 * 1024 * 1024 // 10MB limit
@@ -21,11 +21,11 @@ const upload = multer({
 router.get('/', async (req, res) => {
   try {
     const posts = await Post.find().sort({ createdAt: -1 }).populate('user', 'name email');
-    
+
     // Get comments for each post and transform media data to base64
     const postsWithComments = await Promise.all(posts.map(async (post) => {
       const comments = await Comment.find({ post: post._id }).populate('user', 'name');
-      
+
       // Convert buffer to base64 string for frontend display
       const postObj = post.toObject();
       if (postObj.media && postObj.media.data) {
@@ -33,13 +33,13 @@ router.get('/', async (req, res) => {
         const mediaUrl = `data:${postObj.media.contentType};base64,${base64}`;
         postObj.mediaUrl = mediaUrl;
       }
-      
+
       return {
         ...postObj,
         comments: comments
       };
     }));
-    
+
     res.json(postsWithComments);
   } catch (error) {
     console.error('Error fetching posts:', error);
@@ -54,10 +54,10 @@ router.get('/:id', async (req, res) => {
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    
+
     // Get comments for the post
     const comments = await Comment.find({ post: post._id }).populate('user', 'name');
-    
+
     // Convert buffer to base64 string for frontend display
     const postObj = post.toObject();
     if (postObj.media && postObj.media.data) {
@@ -65,7 +65,7 @@ router.get('/:id', async (req, res) => {
       const mediaUrl = `data:${postObj.media.contentType};base64,${base64}`;
       postObj.mediaUrl = mediaUrl;
     }
-    
+
     res.json({
       ...postObj,
       comments
@@ -80,7 +80,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', auth, upload.single('media'), async (req, res) => {
   try {
     const { title, description, mediaType, category, location } = req.body;
-    
+
     const newPost = new Post({
       user: req.user.userId,
       title,
@@ -90,7 +90,7 @@ router.post('/', auth, upload.single('media'), async (req, res) => {
       location,
       status: 'posted' // Default status
     });
-    
+
     // If media file was uploaded, add it to the post
     if (req.file) {
       newPost.media = {
@@ -98,12 +98,12 @@ router.post('/', auth, upload.single('media'), async (req, res) => {
         contentType: req.file.mimetype
       };
     }
-    
+
     await newPost.save();
-    
+
     // Return the post with user info and empty comments array
     const populatedPost = await Post.findById(newPost._id).populate('user', 'name email');
-    
+
     // Convert buffer to base64 string for frontend display
     const postObj = populatedPost.toObject();
     if (postObj.media && postObj.media.data) {
@@ -111,7 +111,7 @@ router.post('/', auth, upload.single('media'), async (req, res) => {
       const mediaUrl = `data:${postObj.media.contentType};base64,${base64}`;
       postObj.mediaUrl = mediaUrl;
     }
-    
+
     res.status(201).json({
       ...postObj,
       comments: []
@@ -121,32 +121,50 @@ router.post('/', auth, upload.single('media'), async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+
 // Update post
-router.patch('/:id', auth, async (req, res) => {
+router.patch('/:id', auth, upload.single('media'), async (req, res) => {
   try {
-    const { title, description, category, location } = req.body;
-    
+    const { title, description, mediaType, category, location } = req.body;
+
+    // console.log("I am here!!!!!!!!");
+    // console.log("Incoming file details:", req.file);
+
     // Find post and verify ownership
     const post = await Post.findById(req.params.id);
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    
+
     // Check if user owns the post
     if (post.user.toString() != req.user.userId) {
       return res.status(403).json({ message: 'Not authorized to update this post' });
     }
-    
-    // Update post
+
+    // Update post with media handling integrated
     const updatedPost = await Post.findByIdAndUpdate(
       req.params.id,
-      { title, description, category, location },
+      {
+        title,
+        description,
+        mediaType,
+        category,
+        location,
+        ...(req.file && {
+          media: {
+            data: req.file.buffer,
+            contentType: req.file.mimetype
+          }
+        })
+      },
       { new: true }
     ).populate('user', 'name email');
-    
+
+    // console.log("UPDATEDPOST", updatedPost);
+
     // Get comments
     const comments = await Comment.find({ post: updatedPost._id }).populate('user', 'name');
-    
+
     // Convert media to base64 if exists
     const postObj = updatedPost.toObject();
     if (postObj.media && postObj.media.data) {
@@ -154,7 +172,7 @@ router.patch('/:id', auth, async (req, res) => {
       const mediaUrl = `data:${postObj.media.contentType};base64,${base64}`;
       postObj.mediaUrl = mediaUrl;
     }
-    
+
     res.json({
       ...postObj,
       comments
@@ -165,25 +183,26 @@ router.patch('/:id', auth, async (req, res) => {
   }
 });
 
+
 // Delete post
 router.delete('/:id', auth, async (req, res) => {
   try {
     // Find post and verify ownership
     const post = await Post.findById(req.params.id);
-    
+
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    
+
     // Check if user owns the post
     if (post.user.toString() != req.user.userId) {
       return res.status(403).json({ message: 'Not authorized to delete this post' });
     }
-    
+
     // Delete associated comments and votes
     await Comment.deleteMany({ post: req.params.id });
     await Vote.deleteMany({ post: req.params.id });
-    
+
     // Delete the post
     await Post.findByIdAndDelete(req.params.id);
     res.json({ message: 'Post deleted successfully' });
@@ -197,24 +216,24 @@ router.delete('/:id', auth, async (req, res) => {
 router.patch('/:id/status', adminAuth, async (req, res) => {
   try {
     const { status } = req.body;
-    
+
     if (!['posted', 'waitlist', 'in_progress', 'completed'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
     }
-    
+
     const post = await Post.findByIdAndUpdate(
       req.params.id,
       { status },
       { new: true }
     ).populate('user', 'name email');
-    
+
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    
+
     // Get comments for the post
     const comments = await Comment.find({ post: post._id }).populate('user', 'name');
-    
+
     // Convert buffer to base64 string for frontend display
     const postObj = post.toObject();
     if (postObj.media && postObj.media.data) {
@@ -222,7 +241,7 @@ router.patch('/:id/status', adminAuth, async (req, res) => {
       const mediaUrl = `data:${postObj.media.contentType};base64,${base64}`;
       postObj.mediaUrl = mediaUrl;
     }
-    
+
     res.json({
       ...postObj,
       comments
@@ -237,17 +256,17 @@ router.patch('/:id/status', adminAuth, async (req, res) => {
 router.post('/:id/vote', auth, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
-    
+
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    
+
     // Check if user already voted
     const existingVote = await Vote.findOne({
       user: req.user.userId,
       post: req.params.id
     });
-    
+
     if (existingVote) {
       // Remove vote
       await Vote.findByIdAndDelete(existingVote._id);
@@ -259,19 +278,19 @@ router.post('/:id/vote', auth, async (req, res) => {
         post: req.params.id
       });
       await newVote.save();
-      
+
       // Update post votes array
       post.votes.push(req.user.userId);
     }
-    
+
     await post.save();
-    
+
     // Get the updated post with user info
     const updatedPost = await Post.findById(post._id).populate('user', 'name email');
-    
+
     // Get comments for the post
     const comments = await Comment.find({ post: post._id }).populate('user', 'name');
-    
+
     // Convert buffer to base64 string for frontend display
     const postObj = updatedPost.toObject();
     if (postObj.media && postObj.media.data) {
@@ -279,7 +298,7 @@ router.post('/:id/vote', auth, async (req, res) => {
       const mediaUrl = `data:${postObj.media.contentType};base64,${base64}`;
       postObj.mediaUrl = mediaUrl;
     }
-    
+
     res.json({
       ...postObj,
       comments
@@ -294,29 +313,29 @@ router.post('/:id/vote', auth, async (req, res) => {
 router.post('/:id/comment', auth, async (req, res) => {
   try {
     const { text } = req.body;
-    
+
     if (!text) {
       return res.status(400).json({ message: 'Comment text is required' });
     }
-    
+
     const post = await Post.findById(req.params.id);
-    
+
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    
+
     // Create new comment in comments collection
     const newComment = new Comment({
       user: req.user.userId,
       post: req.params.id,
       text
     });
-    
+
     await newComment.save();
-    
+
     // Return the new comment
     const populatedComment = await Comment.findById(newComment._id).populate('user', 'name');
-    
+
     res.status(201).json(populatedComment);
   } catch (error) {
     console.error('Error adding comment:', error);
@@ -328,11 +347,11 @@ router.post('/:id/comment', auth, async (req, res) => {
 router.get('/user/me', auth, async (req, res) => {
   try {
     const posts = await Post.find({ user: req.user.userId }).sort({ createdAt: -1 });
-    
+
     // Get comments for each post and transform media data to base64
     const postsWithComments = await Promise.all(posts.map(async (post) => {
       const comments = await Comment.find({ post: post._id }).populate('user', 'name');
-      
+
       // Convert buffer to base64 string for frontend display
       const postObj = post.toObject();
       if (postObj.media && postObj.media.data) {
@@ -340,13 +359,13 @@ router.get('/user/me', auth, async (req, res) => {
         const mediaUrl = `data:${postObj.media.contentType};base64,${base64}`;
         postObj.mediaUrl = mediaUrl;
       }
-      
+
       return {
         ...postObj,
         comments: comments
       };
     }));
-    
+
     res.json(postsWithComments);
   } catch (error) {
     console.error('Error fetching user posts:', error);

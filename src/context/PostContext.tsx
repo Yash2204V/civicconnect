@@ -49,6 +49,8 @@ interface NewPost {
 interface UpdatePost {
   title: string;
   description: string;
+  media?: File;
+  mediaType: 'image' | 'video';
   category: string;
   location: string;
 }
@@ -193,17 +195,17 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+
   // Update a post
   const updatePost = async (postId: string, postData: UpdatePost): Promise<Post> => {
     if (!isAuthenticated) {
       throw new Error('You must be logged in to update a post');
     }
-
+    
     setLoading(true);
     setError(null);
     try {
       const response = await axios.patch(`${API_URL}/posts/${postId}`, postData);
-      
       const updatedPost = response.data;
       
       // Update posts state
@@ -212,6 +214,7 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
           post._id === postId ? updatedPost : post
         )
       );
+      
       
       // Update user posts if applicable
       setUserPosts(prevPosts => 

@@ -230,21 +230,35 @@ const Profile = () => {
     setPostToDelete(null);
   };
 
+
+  // -------------------------------------------------
   const handleUpdatePost = async () => {
     if (!editingPostId) return;
 
     try {
+      if (!title || !description || !category || !media) return;
+
+      // Determine media type from file
+      let mediaType = 'image';
+      if (media && media.type.startsWith('video/')) {
+        mediaType = 'video';
+      }
+
       await updatePost(editingPostId, {
         title,
         description,
+        media: media || undefined,
+        mediaType: mediaType as 'image' | 'video',
         category,
-        location
+        location: location || 'Unknown location'
       });
+  
 
       setShowNewPost(false);
       setEditingPostId(null);
       // Reset form
       setTitle('');
+      setMedia(null);
       setDescription('');
       setCategory('');
       setLocation('');
@@ -259,8 +273,12 @@ const Profile = () => {
     setDescription(post.description);
     setCategory(post.category);
     setLocation(post.location);
+    setMedia(post.media);
+    setPreviewUrl(post.mediaUrl);
     setShowNewPost(true);
   };
+
+  // -------------------------------------------------
 
   const handleDeleteClick = (postId: string) => {
     setPostToDelete(postId);
@@ -603,7 +621,7 @@ const Profile = () => {
         )}
       </AnimatePresence>
 
-      {/* Edit Post Modal */} 
+      {/* Edit Post Modal */}
       <AnimatePresence>
         {showNewPost && (
           <motion.div
@@ -618,20 +636,21 @@ const Profile = () => {
               exit={{ scale: 0.95, opacity: 0 }}
               className="bg-white rounded-xl p-6 max-w-lg w-full"
             >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-bold text-gray-900">
-                  {editingPostId ? 'Edit Post' : 'New Post'}
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowNewPost(false);
-                    setEditingPostId(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
+
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-bold text-gray-900">
+                    {editingPostId ? 'Edit Post' : 'New Post'}
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setShowNewPost(false);
+                      setEditingPostId(null);
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
 
               <div className="space-y-4">
                 <div>
@@ -683,6 +702,34 @@ const Profile = () => {
                 </div>
               </div>
 
+              <div className="mb-6">
+                <label className="block text-gray-700 text-sm font-medium mb-2">
+                  Media (Image or Video)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={handleMediaChange}
+                  className="hidden"
+                  id="media"
+                />
+                <label
+                  htmlFor="media"
+                  className="cursor-pointer flex items-center justify-center border-2 border-dashed border-indigo-200 rounded-lg p-6 hover:border-indigo-400 transition-colors duration-200"
+                >
+                  {previewUrl ? (
+                    <img src={previewUrl} alt="Preview" className="max-h-64 rounded-lg" />
+                  ) : (
+                    <div className="text-center">
+                      <Camera className="mx-auto h-12 w-12 text-indigo-300" />
+                      <p className="mt-2 text-sm text-indigo-500">
+                        Click to upload media (optional)
+                      </p>
+                    </div>
+                  )}
+                </label>
+              </div>;
+
               <div className="mt-6 flex justify-end space-x-3">
                 <button
                   onClick={() => {
@@ -693,13 +740,13 @@ const Profile = () => {
                 >
                   Cancel
                 </button>
-                <button
-                  onClick={handleUpdatePost}
+                <button onClick={handleUpdatePost}
                   className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
                 >
                   Save Changes
                 </button>
               </div>
+
             </motion.div>
           </motion.div>
         )}
@@ -832,10 +879,10 @@ const Profile = () => {
                     accept="image/*,video/*"
                     onChange={handleMediaChange}
                     className="hidden"
-                    id="media-upload"
+                    id="media"
                   />
                   <label
-                    htmlFor="media-upload"
+                    htmlFor="media"
                     className="cursor-pointer flex items-center justify-center border-2 border-dashed border-indigo-200 rounded-lg p-6 hover:border-indigo-400 transition-colors duration-200"
                   >
                     {previewUrl ? (
@@ -895,18 +942,7 @@ const Profile = () => {
               </form>
             </motion.div>
           ) : (
-            <motion.button
-              onClick={() => setShowNewPost(true)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full btn-primary py-3 mb-8 flex items-center justify-center"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-            >
-              <Upload className="w-5 h-5 mr-2" />
-              Create New Post
-            </motion.button>
+            <></>
           )}
         </AnimatePresence>
 
