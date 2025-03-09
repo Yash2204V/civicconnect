@@ -98,7 +98,7 @@ const AdminPanel = () => {
   useEffect(() => {
     const isAdminAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
     if (!isAdminAuthenticated) {
-      navigate('/admin-login');
+      navigate('/indiancops-login');
     }
   }, [navigate]);
 
@@ -133,7 +133,7 @@ const AdminPanel = () => {
 
   const handleLogout = () => {
     sessionStorage.removeItem('adminAuthenticated');
-    navigate('/admin-login');
+    navigate('/indiancops-login');
   };
 
   const handleRefresh = async () => {

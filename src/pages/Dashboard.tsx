@@ -30,7 +30,6 @@ import {
   Menu,
   Home,
   LogOut,
-  Settings,
   Bell
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -570,12 +569,8 @@ const Dashboard = () => {
                           <Home className="h-5 w-5 text-indigo-500 mr-3" />
                           <span>Dashboard</span>
                         </Link>
-                        <Link to="/settings" className="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors duration-200">
-                          <Settings className="h-5 w-5 text-indigo-500 mr-3" />
-                          <span>Settings</span>
-                        </Link>
                         {user?.role === 'admin' && (
-                          <Link to="/admin-login" className="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors duration-200">
+                          <Link to="/indiancops-login" className="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors duration-200">
                             <Shield className="h-5 w-5 text-indigo-500 mr-3" />
                             <span>Admin Panel</span>
                           </Link>
@@ -656,7 +651,7 @@ const Dashboard = () => {
                     </Link>
 
                     {user?.role === 'admin' && (
-                      <Link to="/admin-login" className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-50">
+                      <Link to="/indiancops-login" className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-50">
                         <Shield className="h-5 w-5 text-indigo-500 mr-3" />
                         <span>Admin Panel</span>
                       </Link>
@@ -1663,7 +1658,7 @@ const Dashboard = () => {
       {/* Floating Action Button - Admin Access */}
       {user?.role === 'admin' && (
         <Link
-          to="/admin-login"
+          to="/indiancops-login"
           className="fixed bottom-6 right-6 cinematic-button p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 z-30"
         >
           <Shield className="h-6 w-6" />

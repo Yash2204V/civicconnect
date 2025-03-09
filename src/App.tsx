@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
@@ -21,8 +20,8 @@ function App() {
           >
             <Routes>
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/admin-login" element={<AdminLogin />} />
-              <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/indiancops-login" element={<AdminLogin />} />
+              <Route path="/indiancops" element={<AdminPanel />} />
               <Route path="/login" element={<Login />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/" element={<Navigate to="/dashboard" />} />

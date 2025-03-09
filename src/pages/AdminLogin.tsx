@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, Lock, Eye, EyeOff, Shield, ArrowLeft } from 'lucide-react';
+import { Lock, Eye, EyeOff, Shield, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AdminLogin = () => {
@@ -18,7 +18,7 @@ const AdminLogin = () => {
     // Check if already authenticated
     const isAdminAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
     if (isAdminAuthenticated) {
-      navigate('/admin');
+      navigate('/indiancops');
     }
   }, [navigate]);
 
@@ -35,7 +35,7 @@ const AdminLogin = () => {
       setTimeout(() => {
         // Store admin authentication in session storage
         sessionStorage.setItem('adminAuthenticated', 'true');
-        navigate('/admin');
+        navigate('/indiancops');
       }, 1000);
     } else {
       setError('Invalid password');
