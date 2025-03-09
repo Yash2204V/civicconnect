@@ -169,6 +169,7 @@ const Profile = () => {
     }
   };
 
+
   const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -368,7 +369,10 @@ const Profile = () => {
               <div className="relative">
                 <div className="h-24 w-24 md:h-32 md:w-32 rounded-full bg-gradient-primary flex items-center justify-center text-white text-3xl font-bold shadow-lg overflow-hidden">
                   {profileImage ? (
-                    <img src={profileImage} alt={user?.name} className="w-full h-full object-cover" />
+                    <>
+                      <Camera className="mx-auto h-12 w-12 text-indigo-300" />
+                      <img src={profileImage} alt={user?.name} className="w-full h-full object-cover" />
+                    </>
                   ) : (
                     user?.name.charAt(0).toUpperCase()
                   )}
@@ -718,17 +722,19 @@ const Profile = () => {
                   className="cursor-pointer flex items-center justify-center border-2 border-dashed border-indigo-200 rounded-lg p-6 hover:border-indigo-400 transition-colors duration-200"
                 >
                   {previewUrl ? (
-                    <img src={previewUrl} alt="Preview" className="max-h-64 rounded-lg" />
+                    <div className="text-center">
+                      <img src={previewUrl} alt="Preview" className="max-h-64 rounded-lg" />
+                    </div>
                   ) : (
                     <div className="text-center">
-                      <Camera className="mx-auto h-12 w-12 text-indigo-300" />
+                      <Camera className="mx-auto h-12 w-12 text-indigo-300" /> 
                       <p className="mt-2 text-sm text-indigo-500">
                         Click to upload media (optional)
                       </p>
                     </div>
                   )}
                 </label>
-              </div>;
+              </div>
 
               <div className="mt-6 flex justify-end space-x-3">
                 <button
@@ -1186,12 +1192,12 @@ const Profile = () => {
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">No posts yet</h3>
                     <p className="text-gray-500 mb-6">Create your first post to get started</p>
-                    <button
+                    {/* <button
                       onClick={() => setShowNewPost(true)}
                       className="btn-primary mx-auto"
                     >
                       Create Post
-                    </button>
+                    </button> */}
                   </div>
                 </div>
               )}

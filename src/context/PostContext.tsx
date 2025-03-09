@@ -196,33 +196,47 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
 
-  // Update a post
   const updatePost = async (postId: string, postData: UpdatePost): Promise<Post> => {
     if (!isAuthenticated) {
       throw new Error('You must be logged in to update a post');
     }
-    
+  
+    const formData = new FormData();
+    formData.append('title', postData.title);
+    formData.append('description', postData.description);
+    formData.append('mediaType', postData.mediaType);
+    formData.append('category', postData.category);
+    formData.append('location', postData.location);
+  
+    // Append media file only if it exists
+    if (postData.media) {
+      formData.append('media', postData.media);
+    }
+  
     setLoading(true);
     setError(null);
+  
     try {
-      const response = await axios.patch(`${API_URL}/posts/${postId}`, postData);
+      const response = await axios.patch(`${API_URL}/posts/${postId}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' } // Key change here
+      });
+  
       const updatedPost = response.data;
-      
+  
       // Update posts state
-      setPosts(prevPosts => 
-        prevPosts.map(post => 
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
           post._id === postId ? updatedPost : post
         )
       );
-      
-      
+  
       // Update user posts if applicable
-      setUserPosts(prevPosts => 
-        prevPosts.map(post => 
+      setUserPosts(prevPosts =>
+        prevPosts.map(post =>
           post._id === postId ? updatedPost : post
         )
       );
-      
+  
       return updatedPost;
     } catch (err) {
       console.error('Error updating post:', err);
@@ -232,6 +246,7 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     }
   };
+  
 
   // Delete a post
   const deletePost = async (postId: string): Promise<void> => {

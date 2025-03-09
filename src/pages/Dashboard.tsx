@@ -1179,6 +1179,7 @@ const Dashboard = () => {
                         )}
                       </div>
                     )}
+                    
                     {/* Post Content */}
                     <div className="p-4">
                       <h2 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{post.title}</h2>
