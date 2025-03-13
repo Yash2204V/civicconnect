@@ -47,6 +47,8 @@ interface Post {
     _id: string;
     name: string;
     email?: string;
+    phone?: number;
+    address?: string;
   };
   createdAt: string;
   comments: Comment[];
@@ -830,6 +832,12 @@ const AdminPanel = () => {
                             <p className="font-medium text-gray-900">{selectedPost.user.name}</p>
                             <p className="text-xs text-gray-500">
                               {selectedPost.user.email || 'No email provided'}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {selectedPost.user.phone || 'No phone provided'}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {selectedPost.user.address || 'No address provided'}
                             </p>
                           </div>
                         </div>

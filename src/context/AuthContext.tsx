@@ -5,6 +5,8 @@ interface User {
   _id: string;
   name: string;
   email: string;
+  phone: string;
+  address: string;
   role: string;
 }
 
@@ -12,7 +14,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, phone: string, address: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -40,12 +42,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-
       const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
       const userData = {
         _id: response.data.userId,
         name: response.data.name,
         email: response.data.email,
+        phone: response.data.phone,
+        address: response.data.address,
         role: response.data.role
       };
       
@@ -65,16 +68,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (name: string, email: string, password: string, phone: string, address: string) => {
     setLoading(true);
     try {
-
-      // If not using demo credentials, try to register with the API
-      const response = await axios.post('http://localhost:5000/api/auth/register', { name, email, password });
+      const response = await axios.post('http://localhost:5000/api/auth/register', { 
+        name, 
+        email, 
+        password,
+        phone,
+        address
+      });
+      
       const userData = {
         _id: response.data.userId,
         name: response.data.name,
         email: response.data.email,
+        phone: response.data.phone,
+        address: response.data.address,
         role: response.data.role
       };
 

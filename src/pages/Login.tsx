@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, Eye, EyeOff, UserPlus, User, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, UserPlus, User, ArrowLeft, Phone, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
@@ -16,7 +18,6 @@ const Login = () => {
   const [animationComplete, setAnimationComplete] = useState(false);
 
   useEffect(() => {
-    // Set animation complete after a delay
     const timer = setTimeout(() => {
       setAnimationComplete(true);
     }, 800);
@@ -30,8 +31,7 @@ const Login = () => {
 
     try {
       if (isRegistering) {
-        // Registration logic
-        if (!name || !email || !password) {
+        if (!name || !email || !password || !phone || !address) {
           setError('All fields are required');
           return;
         }
@@ -41,11 +41,9 @@ const Login = () => {
           return;
         }
         
-        // Call the register function from AuthContext
-        await register(name, email, password);
+        await register(name, email, password, phone, address);
         navigate('/dashboard');
       } else {
-        // Login logic
         await login(email, password);
         navigate('/dashboard');
       }
@@ -143,29 +141,79 @@ const Login = () => {
             <form onSubmit={handleSubmit}>
               <AnimatePresence mode="wait">
                 {isRegistering && (
-                  <motion.div 
-                    key="name-field"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="mb-6"
-                  >
-                    <label className="block text-gray-700 text-sm font-medium mb-2">Full Name</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <User className="h-5 w-5 text-indigo-400" />
+                  <>
+                    <motion.div 
+                      key="name-field"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="mb-6"
+                    >
+                      <label className="block text-gray-700 text-sm font-medium mb-2">Full Name</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <User className="h-5 w-5 text-indigo-400" />
+                        </div>
+                        <input
+                          type="text"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          className="w-full pl-10 pr-3 py-2.5 border border-indigo-100 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                          placeholder="Enter your full name"
+                          required={isRegistering}
+                        />
                       </div>
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="w-full pl-10 pr-3 py-2.5 border border-indigo-100 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                        placeholder="Enter your full name"
-                        required={isRegistering}
-                      />
-                    </div>
-                  </motion.div>
+                    </motion.div>
+
+                    <motion.div 
+                      key="phone-field"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="mb-6"
+                    >
+                      <label className="block text-gray-700 text-sm font-medium mb-2">Phone Number</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Phone className="h-5 w-5 text-indigo-400" />
+                        </div>
+                        <input
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          className="w-full pl-10 pr-3 py-2.5 border border-indigo-100 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                          placeholder="Enter your phone number"
+                          required={isRegistering}
+                        />
+                      </div>
+                    </motion.div>
+
+                    <motion.div 
+                      key="address-field"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="mb-6"
+                    >
+                      <label className="block text-gray-700 text-sm font-medium mb-2">Address</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <MapPin className="h-5 w-5 text-indigo-400" />
+                        </div>
+                        <input
+                          type="text"
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          className="w-full pl-10 pr-3 py-2.5 border border-indigo-100 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                          placeholder="Enter your address"
+                          required={isRegistering}
+                        />
+                      </div>
+                    </motion.div>
+                  </>
                 )}
               </AnimatePresence>
               

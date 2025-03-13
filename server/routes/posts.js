@@ -20,8 +20,8 @@ const upload = multer({
 // Get all posts
 router.get('/', async (req, res) => {
   try {
-    const posts = await Post.find().sort({ createdAt: -1 }).populate('user', 'name email');
-
+    const posts = await Post.find().sort({ createdAt: -1 }).populate('user', 'name email phone address');
+    
     // Get comments for each post and transform media data to base64
     const postsWithComments = await Promise.all(posts.map(async (post) => {
       const comments = await Comment.find({ post: post._id }).populate('user', 'name');
