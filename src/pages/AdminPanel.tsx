@@ -23,7 +23,8 @@ import {
   Calendar,
   Layers,
   Zap,
-  Sparkles
+  Sparkles,
+  Trash2
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -79,7 +80,9 @@ interface StatusData {
 
 const AdminPanel = () => {
   const navigate = useNavigate();
-  const { posts, loading, error, fetchPosts, updatePostStatus } = usePosts();
+  const { posts, loading, error, fetchPosts, updatePostStatus, deletePost } = usePosts();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('votes');
@@ -96,6 +99,31 @@ const AdminPanel = () => {
 
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
   const filtersRef = useRef<HTMLDivElement>(null);
+
+  const confirmDeletePost = () => {
+    // In a real app, this would delete the post
+    // For now, we'll just show a success message
+    alert('Post deleted successfully!');
+    setShowDeleteConfirm(false);
+    setPostToDelete(null);
+  };
+
+  const handleDeleteClick = (postId: string) => {
+    setPostToDelete(postId);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeletePost = async () => {
+    if (!postToDelete) return;
+    try {
+      await deletePost(postToDelete);
+      setShowDeleteConfirm(false);
+      setPostToDelete(null);
+    } catch (error) {
+      console.error('Error deleting post:', error);
+    }
+  };
+
 
   // Check if admin is authenticated
   useEffect(() => {
@@ -543,6 +571,55 @@ const AdminPanel = () => {
           </button>
         </div>
 
+        {/* Delete Confirmation Modal */}
+        <AnimatePresence>
+          {showDeleteConfirm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-white rounded-xl p-6 max-w-md w-full dark:bg-gray-800"
+              >
+                <div className="flex items-center justify-center mb-4">
+                  <div className="bg-red-100 rounded-full p-3 dark:bg-red-200">
+                    <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-700" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 text-center mb-2 dark:text-gray-100">
+                  Delete Post
+                </h3>
+                <p className="text-gray-500 text-center mb-6 dark:text-gray-400">
+                  Are you sure you want to delete this post? This action cannot be undone.
+                </p>
+                <div className="flex justify-center space-x-3">
+                  <button
+                    onClick={() => postToDelete && handleDeletePost()}
+                    className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors duration-200 dark:bg-red-700 dark:hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setPostToDelete(null);
+                    }}
+                    className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors duration-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+
         <AnimatePresence mode="wait">
           {activeTab === 'issues' && (
             <motion.div
@@ -721,10 +798,20 @@ const AdminPanel = () => {
                           >
                             <div className="flex justify-between items-start mb-2">
                               <h3 className="font-medium text-gray-900 dark:text-gray-100">{post.title}</h3>
-                              <span className={`status-badge ${getStatusClass(post.status)}`}>
-                                {getStatusIcon(post.status)}
-                                <span className="ml-1 capitalize">{post.status.replace('_', ' ')}</span>
-                              </span>
+                              <div className='flex gap-4 justify-center items-center'>
+                                <div className="flex space-x-1 justify-center items-center gap-2">
+                                  <button
+                                    onClick={() => handleDeleteClick(post._id)}
+                                    className="p-1.5 bg-white bg-opacity-80 rounded-full text-red-500 hover:text-red-700 hover:bg-opacity-100 transition-colors duration-200 shadow-sm dark:bg-gray-700 dark:text-red-400 dark:hover:bg-gray-600"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+                                <span className={`status-badge ${getStatusClass(post.status)} dark:bg-gray-200`}>
+                                  {getStatusIcon(post.status)}
+                                  <span className="ml-1 capitalize">{post.status.replace('_', ' ')}</span>
+                                </span>
+                              </div>
                             </div>
 
                             <p className="text-gray-600 text-sm mb-2 line-clamp-2 dark:text-gray-300">{post.description}</p>
@@ -949,7 +1036,7 @@ const AdminPanel = () => {
                     <div className="bg-white rounded-xl shadow-sm p-6 text-center dark:bg-gray-800 dark:border dark:border-gray-700">
                       <div className="mb-6 relative">
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="h-32 w-32 rounded-full bg-indigo-100 animate-pulse-slow dark:bg-indigo-900"></div>
+                          <div className="h-24 w-24 rounded-full bg-indigo-100 animate-pulse-slow dark:bg-indigo-900"></div>
                         </div>
                         <AlertTriangle className="h-16 w-16 text-indigo-400 mx-auto relative z-10 dark:text-indigo-500" />
                       </div>

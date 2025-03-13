@@ -494,55 +494,6 @@ const Dashboard = () => {
                 <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
               </button>
 
-              {/* Notifications */}
-              <div className="relative" ref={notificationsRef}>
-                <button
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className={`p-2 rounded-full transition-colors duration-200 ${scrollPosition > 50
-                    ? 'text-indigo-500 hover:bg-indigo-50'
-                    : 'text-white hover:bg-white hover:bg-opacity-20'
-                    }`}
-                >
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
-                </button>
-
-                {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg z-50 overflow-hidden cinematic-card">
-                    <div className="p-4 border-b">
-                      <h3 className="font-semibold text-gray-900">Notifications</h3>
-                    </div>
-                    <div className="max-h-96 overflow-y-auto cinematic-scrollbar">
-                      {notifications.map(notification => (
-                        <div key={notification.id} className="p-4 border-b hover:bg-gray-50 transition-colors duration-200">
-                          <div className="flex items-start">
-                            <div className={`p-2 rounded-full mr-3 ${notification.type === 'vote' ? 'bg-indigo-100 text-indigo-600' :
-                              notification.type === 'comment' ? 'bg-green-100 text-green-600' :
-                                notification.type === 'status' ? 'bg-amber-100 text-amber-600' :
-                                  'bg-blue-100 text-blue-600'
-                              }`}>
-                              {notification.type === 'vote' ? <ThumbsUp className="h-5 w-5" /> :
-                                notification.type === 'comment' ? <MessageCircle className="h-5 w-5" /> :
-                                  notification.type === 'status' ? <RefreshCw className="h-5 w-5" /> :
-                                    <Bell className="h-5 w-5" />}
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-800">{notification.message}</p>
-                              <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="p-3 text-center border-t">
-                      <button className="text-sm font-medium text-indigo-600 hover:text-indigo-800">
-                        View all notifications
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
               {isAuthenticated ? (
                 <div className="relative" ref={userMenuRef}>
                   <button
