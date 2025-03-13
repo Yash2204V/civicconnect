@@ -214,11 +214,11 @@ const AdminPanel = () => {
     switch (status) {
       case 'posted':
         return '#fcd34d';
-            case 'waitlist':
+      case 'waitlist':
         return '#fdba74';
-            case 'in_progress':
+      case 'in_progress':
         return '#93c5fd';
-            case 'completed':
+      case 'completed':
         return '#6ee7b7';
     }
   };
@@ -451,7 +451,7 @@ const AdminPanel = () => {
                   <p className="text-2xl font-bold text-purple-900 dark:text-purple-300">{totalVotes + totalComments}</p>
                 </div>
               </div>
-{/* ---------------------------------------------------------------------------- */}
+              {/* ---------------------------------------------------------------------------- */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white dark:bg-gray-800 dark:border dark:border-gray-700 p-4 rounded-xl shadow-sm border border-gray-100">
                   <h3 className="font-semibold text-gray-900 dark:text-gray-50 mb-4">Issue Status Distribution</h3>
@@ -514,8 +514,8 @@ const AdminPanel = () => {
           <button
             onClick={() => setActiveTab('issues')}
             className={`py-2 px-4 font-medium relative ${activeTab === 'issues'
-                ? 'text-indigo-600 dark:text-indigo-400'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+              ? 'text-indigo-600 dark:text-indigo-400'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
               }`}
           >
             Issues Management
@@ -529,8 +529,8 @@ const AdminPanel = () => {
           <button
             onClick={() => setActiveTab('activity')}
             className={`py-2 px-4 font-medium relative ${activeTab === 'activity'
-                ? 'text-indigo-600 dark:text-indigo-400'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+              ? 'text-indigo-600 dark:text-indigo-400'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
               }`}
           >
             Recent Activity
@@ -590,8 +590,8 @@ const AdminPanel = () => {
                                   <div
                                     key={option.value}
                                     className={`flex items-center px-3 py-2 hover:bg-indigo-50 rounded-lg cursor-pointer ${sortBy === option.value
-                                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300'
-                                        : 'text-gray-700 dark:text-gray-300'
+                                      ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300'
+                                      : 'text-gray-700 dark:text-gray-300'
                                       }`}
                                     onClick={() => {
                                       setSortBy(option.value);
@@ -618,8 +618,8 @@ const AdminPanel = () => {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${filter === status
-                              ? 'bg-gradient-primary text-white shadow-md'
-                              : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:border-gray-600'
+                            ? 'bg-gradient-primary text-white shadow-md'
+                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:border-gray-600'
                             } transition-colors duration-200`}
                         >
                           {status === 'all' ? 'All Issues' : getStatusText(status as Post['status'])}
@@ -713,8 +713,8 @@ const AdminPanel = () => {
                             key={post._id}
                             onClick={() => setSelectedPost(post)}
                             className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedPost?._id === post._id
-                                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
-                                : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/30 dark:border-gray-700 dark:hover:border-indigo-500 dark:hover:bg-indigo-900/20'
+                              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
+                              : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/30 dark:border-gray-700 dark:hover:border-indigo-500 dark:hover:bg-indigo-900/20'
                               }`}
                             whileHover={{ scale: 1.01 }}
                             whileTap={{ scale: 0.99 }}
@@ -825,23 +825,45 @@ const AdminPanel = () => {
                         )}
                       </div>
 
-                      <div className="mb-6">
-                        <h3 className="font-medium text-gray-900 mb-1 dark:text-gray-100">Reported by</h3>
-                        <div className="flex items-center">
-                          <div className="h-8 w-8 rounded-full bg-gradient-secondary flex items-center justify-center text-white font-medium shadow-sm mr-2">
-                            {selectedPost.user.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900 dark:text-gray-100">{selectedPost.user.name}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {selectedPost.user.email || 'No email provided'}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {selectedPost.user.phone || 'No phone provided'}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {selectedPost.user.address || 'No address provided'}
-                            </p>
+                      <div className="mb-8">
+                        <h3 className="font-medium text-gray-900 mb-3 dark:text-gray-100">Reported by</h3>
+                        <div className="p-4 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+                          <div className="flex flex-col items-center sm:flex-row sm:items-start">
+                            {/* Avatar */}
+                            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white font-medium shadow-lg mb-3 sm:mb-0 sm:mr-4">
+                              {selectedPost.user.name.charAt(0).toUpperCase()}
+                            </div>
+
+                            {/* User Details */}
+                            <div className="text-center sm:text-left">
+                              <p className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                                {selectedPost.user.name}
+                              </p>
+
+                              <div className="space-y-1 mt-2">
+                                <div className="flex items-center justify-center sm:justify-start text-gray-600 dark:text-gray-400">
+                                  <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                                  </svg>
+                                  <span className="text-sm">{selectedPost.user.email || 'No email provided'}</span>
+                                </div>
+
+                                <div className="flex items-center justify-center sm:justify-start text-gray-600 dark:text-gray-400">
+                                  <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                                  </svg>
+                                  <span className="text-sm">{selectedPost.user.phone || 'No phone provided'}</span>
+                                </div>
+
+                                <div className="flex items-center justify-center sm:justify-start text-gray-600 dark:text-gray-400">
+                                  <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                  </svg>
+                                  <span className="text-sm">{selectedPost.user.address || 'No address provided'}</span>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -857,8 +879,8 @@ const AdminPanel = () => {
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                               className={`py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center ${selectedPost.status === status
-                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400'
-                                  : `${getStatusClass(status as Post['status'])} hover:opacity-90`
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400'
+                                : `${getStatusClass(status as Post['status'])} hover:opacity-90`
                                 } transition-colors duration-200`}
                             >
                               {getStatusIcon(status as Post['status'])}
@@ -956,10 +978,10 @@ const AdminPanel = () => {
                   <div key={index} className="flex">
                     <div className="mr-4 relative">
                       <div className={`h-10 w-10 rounded-full flex items-center justify-center ${activity.type === 'post'
-                          ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300'
-                          : activity.type === 'comment'
-                            ? 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300'
-                            : 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'
+                        ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300'
+                        : activity.type === 'comment'
+                          ? 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300'
+                          : 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'
                         }`}>
                         {activity.type === 'post'
                           ? <Layers className="h-5 w-5" />
