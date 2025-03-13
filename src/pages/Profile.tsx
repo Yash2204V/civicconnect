@@ -1094,7 +1094,7 @@ const Profile = () => {
                         <div className="p-4 md:w-2/3 flex flex-col">
                           <div className="flex justify-between items-start mb-2">
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{post.title}</h3>
-                            <span className={`status-badge ${getStatusClass(post.status)} dark:bg-gray-700`}>
+                            <span className={`status-badge ${getStatusClass(post.status)} dark:bg-gray-200`}>
                               {getStatusIcon(post.status)}
                               <span className="ml-1 capitalize">{post.status.replace('_', ' ')}</span>
                             </span>

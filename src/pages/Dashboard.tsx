@@ -1152,7 +1152,7 @@ const Dashboard = () => {
                           </p>
                         </div>
                       </div>
-                      <div className={`status-badge ${getStatusClass(post.status)} cinematic-badge dark:bg-gray-700`}>
+                      <div className={`status-badge ${getStatusClass(post.status)} cinematic-badge dark:bg-gray-200`}>
                         {getStatusIcon(post.status)}
                         <span className="ml-1">{getStatusText(post.status)}</span>
                       </div>

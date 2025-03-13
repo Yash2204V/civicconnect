@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   AlertTriangle,
   Clock,
@@ -405,54 +405,54 @@ const AdminPanel = () => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-white border-b"
+            className="bg-white border-b dark:bg-gray-800 dark:border dark:border-gray-700"
           >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 dark:bg-gray-800 dark:border dark:border-gray-700">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-gradient-to-br from-amber-50 to-amber-100 p-4 rounded-xl shadow-sm">
-                  <div className="flex items-center mb-2">
+                <div className="bg-amber-100 p-4 rounded-xl shadow-sm  dark:bg-gray-800 dark:border dark:border-gray-700">
+                  <div className="flex items-center mb-2 ">
                     <div className="p-2 rounded-full bg-amber-200 text-amber-700">
                       <Layers className="h-5 w-5" />
                     </div>
-                    <h3 className="ml-2 font-semibold text-amber-900">Total Issues</h3>
+                    <h3 className="ml-2 font-semibold dark:text-amber-400 text-amber-900">Total Issues</h3>
                   </div>
-                  <p className="text-2xl font-bold text-amber-900">{totalIssues}</p>
+                  <p className="text-2xl font-bold dark:text-amber-400 text-amber-900">{totalIssues}</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 rounded-xl shadow-sm">
+                <div className="bg-emerald-100 p-4 rounded-xl shadow-sm dark:bg-gray-800 dark:border dark:border-gray-700">
                   <div className="flex items-center mb-2">
                     <div className="p-2 rounded-full bg-emerald-200 text-emerald-700">
                       <CheckCircle className="h-5 w-5" />
                     </div>
-                    <h3 className="ml-2 font-semibold text-emerald-900">Resolved</h3>
+                    <h3 className="ml-2 font-semibold dark:text-emerald-300 text-emerald-900">Resolved</h3>
                   </div>
-                  <p className="text-2xl font-bold text-emerald-900">{resolvedIssues}</p>
+                  <p className="text-2xl font-bold dark:text-emerald-300 text-emerald-900">{resolvedIssues}</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl shadow-sm">
+                <div className="bg-blue-100 p-4 rounded-xl shadow-sm dark:bg-gray-800 dark:border dark:border-gray-700">
                   <div className="flex items-center mb-2">
                     <div className="p-2 rounded-full bg-blue-200 text-blue-700">
                       <Users className="h-5 w-5" />
                     </div>
-                    <h3 className="ml-2 font-semibold text-blue-900">Users</h3>
+                    <h3 className="ml-2 font-semibold text-blue-900 dark:text-blue-400">Users</h3>
                   </div>
-                  <p className="text-2xl font-bold text-blue-900">{uniqueUsers}</p>
+                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-400">{uniqueUsers}</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl shadow-sm">
+                <div className="bg-purple-100 p-4 rounded-xl shadow-sm dark:bg-gray-800 dark:border dark:border-gray-700">
                   <div className="flex items-center mb-2">
-                    <div className="p-2 rounded-full bg-purple-200 text-purple-700">
+                    <div className="p-2 rounded-full bg-purple-200 text-purple-700 dark:text-purple-900">
                       <MessageCircle className="h-5 w-5" />
                     </div>
-                    <h3 className="ml-2 font-semibold text-purple-900">Engagement</h3>
+                    <h3 className="ml-2 font-semibold text-purple-900 dark:text-purple-300">Engagement</h3>
                   </div>
-                  <p className="text-2xl font-bold text-purple-900">{totalVotes + totalComments}</p>
+                  <p className="text-2xl font-bold text-purple-900 dark:text-purple-300">{totalVotes + totalComments}</p>
                 </div>
               </div>
-
+{/* ---------------------------------------------------------------------------- */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                  <h3 className="font-semibold text-gray-900 mb-4">Issue Status Distribution</h3>
+                <div className="bg-white dark:bg-gray-800 dark:border dark:border-gray-700 p-4 rounded-xl shadow-sm border border-gray-100">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-50 mb-4">Issue Status Distribution</h3>
                   <div className="flex items-center space-x-2 mb-4">
                     {statusData.map((status) => (
                       <div
@@ -473,17 +473,17 @@ const AdminPanel = () => {
                           className="h-3 w-3 rounded-full mr-2"
                           style={{ backgroundColor: status.color }}
                         ></div>
-                        <span className="text-xs text-gray-600">{status.name}: {status.count}</span>
+                        <span className="text-xs text-gray-600 dark:text-gray-50">{status.name}: {status.count}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                  <h3 className="font-semibold text-gray-900 mb-4">Top Categories</h3>
+                <div className="bg-white dark:bg-gray-800 dark:border dark:border-gray-700 p-4 rounded-xl shadow-sm border border-gray-100">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-50 mb-4">Top Categories</h3>
                   {categoryData.map((category, index) => (
                     <div key={category.name} className="mb-2">
-                      <div className="flex justify-between text-xs text-gray-600 mb-1">
+                      <div className="flex justify-between text-xs text-gray-600 dark:text-gray-50 mb-1">
                         <span>{category.name}</span>
                         <span>{category.count} issues</span>
                       </div>
@@ -776,10 +776,10 @@ const AdminPanel = () => {
                 {/* Right Column - Post Details */}
                 <div className="md:w-1/2 lg:w-1/3">
                   {selectedPost ? (
-                    <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24 dark:bg-gray-800 dark:border dark:border-gray-700">
+                    <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24 dark:bg-gray-700 dark:border dark:border-gray-700">
                       <div className="flex justify-between items-start mb-4">
                         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{selectedPost.title}</h2>
-                        <span className={`status-badge ${getStatusClass(selectedPost.status)} dark:bg-gray-700`}>
+                        <span className={`status-badge ${getStatusClass(selectedPost.status)} dark:bg-gray-300`}>
                           {getStatusIcon(selectedPost.status)}
                           <span className="ml-1 capitalize">{selectedPost.status.replace('_', ' ')}</span>
                         </span>
@@ -849,7 +849,7 @@ const AdminPanel = () => {
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                               className={`py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center ${selectedPost.status === status
-                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400'
                                   : `${getStatusClass(status as Post['status'])} hover:opacity-90`
                                 } transition-colors duration-200`}
                             >
