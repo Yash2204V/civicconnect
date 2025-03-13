@@ -59,12 +59,12 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-700 to-purple-700 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-10 left-10 w-64 h-64 bg-indigo-300 opacity-20 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute bottom-10 right-10 w-80 h-80 bg-purple-300 opacity-20 rounded-full blur-3xl animate-float-delay-1"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-300 opacity-10 rounded-full blur-3xl animate-float-delay-2"></div>
+        <div className="absolute top-10 left-10 w-64 h-64 bg-indigo-700 opacity-20 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-10 right-10 w-80 h-80 bg-purple-700 opacity-20 rounded-full blur-3xl animate-float-delay-1"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-700 opacity-10 rounded-full blur-3xl animate-float-delay-2"></div>
       </div>
       
       <div className="w-full max-w-md relative z-10">
@@ -76,7 +76,7 @@ const Login = () => {
         >
           <button 
             onClick={() => navigate('/dashboard')}
-            className="flex items-center text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
+            className="flex items-center text-indigo-300 hover:text-indigo-800 transition-colors duration-200"
           >
             <ArrowLeft className="h-5 w-5 mr-1" />
             <span>Back to Dashboard</span>

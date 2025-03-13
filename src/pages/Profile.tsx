@@ -31,7 +31,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePosts } from '../context/PostContext';
-// import ThemeToggle from '../components/ThemeToggle';
+import ThemeToggle from '../components/ThemeToggle';
 
 interface UserProfile {
   name: string;
@@ -346,7 +346,6 @@ const Profile = () => {
   }
 
   return (
-
     <div className="min-h-screen bg-gray-50 bg-dot-pattern dark:bg-gray-900 dark:bg-dot-pattern-dark">
       {/* Header */}
       <div className="bg-white bg-opacity-90 backdrop-blur-md border-b shadow-sm dark:bg-gray-800 dark:border-gray-700">
@@ -361,7 +360,7 @@ const Profile = () => {
                 <span>Back to Dashboard</span>
               </Link>
               <div className="flex space-x-4">
-                {/* <ThemeToggle /> */}
+                <ThemeToggle />
                 <button
                   onClick={() => setShowSettings(true)}
                   className="text-gray-600 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100 transition-colors duration-200 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700"
@@ -1009,8 +1008,8 @@ const Profile = () => {
           <button
             onClick={() => setActiveTab('posts')}
             className={`py-2 px-4 font-medium relative ${activeTab === 'posts'
-              ? 'text-indigo-600 dark:text-indigo-400'
-              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                ? 'text-indigo-600 dark:text-indigo-400'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
           >
             My Posts
@@ -1024,8 +1023,8 @@ const Profile = () => {
           <button
             onClick={() => setActiveTab('activity')}
             className={`py-2 px-4 font-medium relative ${activeTab === 'activity'
-              ? 'text-indigo-600 dark:text-indigo-400'
-              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                ? 'text-indigo-600 dark:text-indigo-400'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
           >
             Activity
@@ -1039,8 +1038,8 @@ const Profile = () => {
           <button
             onClick={() => setActiveTab('achievements')}
             className={`py-2 px-4 font-medium relative ${activeTab === 'achievements'
-              ? 'text-indigo-600 dark:text-indigo-400'
-              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                ? 'text-indigo-600 dark:text-indigo-400'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
           >
             Achievements
@@ -1109,7 +1108,7 @@ const Profile = () => {
                         <div className="p-4 md:w-2/3 flex flex-col">
                           <div className="flex justify-between items-start mb-2">
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{post.title}</h3>
-                            <span className={`status-badge ${getStatusClass(post.status)} dark:bg-gray-700`}>
+                            <span className={`status-badge ${getStatusClass(post.status)} dark:bg-gray-200`}>
                               {getStatusIcon(post.status)}
                               <span className="ml-1 capitalize">{post.status.replace('_', ' ')}</span>
                             </span>
@@ -1366,15 +1365,15 @@ const Profile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div
                   className={`p-4 rounded-xl border ${userPosts.length > 0
-                    ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-900'
-                    : 'border-gray-200 bg-gray-50 opacity-50 dark:border-gray-700 dark:bg-gray-700'
+                      ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-900'
+                      : 'border-gray-200 bg-gray-50 opacity-50 dark:border-gray-700 dark:bg-gray-700'
                     }`}
                 >
                   <div className="flex items-center mb-3">
                     <div
                       className={`p-2 rounded-full ${userPosts.length > 0
-                        ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-300'
-                        : 'bg-gray-100 text-gray-400 dark:bg-gray-600 dark:text-gray-300'
+                          ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-300'
+                          : 'bg-gray-100 text-gray-400 dark:bg-gray-600 dark:text-gray-300'
                         }`}
                     >
                       <Upload className="h-5 w-5" />
@@ -1392,15 +1391,15 @@ const Profile = () => {
 
                 <div
                   className={`p-4 rounded-xl border ${userPosts.length >= 5
-                    ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-900'
-                    : 'border-gray-200 bg-gray-50 opacity-50 dark:border-gray-700 dark:bg-gray-700'
+                      ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-900'
+                      : 'border-gray-200 bg-gray-50 opacity-50 dark:border-gray-700 dark:bg-gray-700'
                     }`}
                 >
                   <div className="flex items-center mb-3">
                     <div
                       className={`p-2 rounded-full ${userPosts.length >= 5
-                        ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-300'
-                        : 'bg-gray-100 text-gray-400 dark:bg-gray-600 dark:text-gray-300'
+                          ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-300'
+                          : 'bg-gray-100 text-gray-400 dark:bg-gray-600 dark:text-gray-300'
                         }`}
                     >
                       <TrendingUp className="h-5 w-5" />
@@ -1415,15 +1414,15 @@ const Profile = () => {
 
                 <div
                   className={`p-4 rounded-xl border ${userPosts.reduce((sum, post) => sum + post.votes.length, 0) >= 10
-                    ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-900'
-                    : 'border-gray-200 bg-gray-50 opacity-50 dark:border-gray-700 dark:bg-gray-700'
+                      ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-900'
+                      : 'border-gray-200 bg-gray-50 opacity-50 dark:border-gray-700 dark:bg-gray-700'
                     }`}
                 >
                   <div className="flex items-center mb-3">
                     <div
                       className={`p-2 rounded-full ${userPosts.reduce((sum, post) => sum + post.votes.length, 0) >= 10
-                        ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-300'
-                        : 'bg-gray-100 text-gray-400 dark:bg-gray-600 dark:text-gray-300'
+                          ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-300'
+                          : 'bg-gray-100 text-gray-400 dark:bg-gray-600 dark:text-gray-300'
                         }`}
                     >
                       <ThumbsUp className="h-5 w-5" />
@@ -1440,15 +1439,15 @@ const Profile = () => {
 
                 <div
                   className={`p-4 rounded-xl border ${userPosts.filter((post) => post.status === 'completed').length >= 1
-                    ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-900'
-                    : 'border-gray-200 bg-gray-50 opacity-50 dark:border-gray-700 dark:bg-gray-700'
+                      ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-900'
+                      : 'border-gray-200 bg-gray-50 opacity-50 dark:border-gray-700 dark:bg-gray-700'
                     }`}
                 >
                   <div className="flex items-center mb-3">
                     <div
                       className={`p-2 rounded-full ${userPosts.filter((post) => post.status === 'completed').length >= 1
-                        ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-300'
-                        : 'bg-gray-100 text-gray-400 dark:bg-gray-600 dark:text-gray-300'
+                          ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-300'
+                          : 'bg-gray-100 text-gray-400 dark:bg-gray-600 dark:text-gray-300'
                         }`}
                     >
                       <CheckCircle className="h-5 w-5" />
@@ -1465,15 +1464,15 @@ const Profile = () => {
 
                 <div
                   className={`p-4 rounded-xl border ${userPosts.reduce((sum, post) => sum + post.comments.length, 0) >= 5
-                    ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-900'
-                    : 'border-gray-200 bg-gray-50 opacity-50 dark:border-gray-700 dark:bg-gray-700'
+                      ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-900'
+                      : 'border-gray-200 bg-gray-50 opacity-50 dark:border-gray-700 dark:bg-gray-700'
                     }`}
                 >
                   <div className="flex items-center mb-3">
                     <div
                       className={`p-2 rounded-full ${userPosts.reduce((sum, post) => sum + post.comments.length, 0) >= 5
-                        ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-300'
-                        : 'bg-gray-100 text-gray-400 dark:bg-gray-600 dark:text-gray-300'
+                          ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-300'
+                          : 'bg-gray-100 text-gray-400 dark:bg-gray-600 dark:text-gray-300'
                         }`}
                     >
                       <MessageCircle className="h-5 w-5" />
