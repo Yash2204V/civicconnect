@@ -7,6 +7,7 @@ interface User {
   email: string;
   phone: string;
   address: string;
+  bio: string;
   role: string;
 }
 
@@ -14,7 +15,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, phone: string, address: string) => Promise<void>;
+  register: (name: string, email: string, password: string, phone: string, address: string, bio: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -49,6 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: response.data.email,
         phone: response.data.phone,
         address: response.data.address,
+        bio: response.data.bio,
         role: response.data.role
       };
       
@@ -68,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (name: string, email: string, password: string, phone: string, address: string) => {
+  const register = async (name: string, email: string, password: string, phone: string, address: string, bio: string) => {
     setLoading(true);
     try {
       const response = await axios.post('http://localhost:5000/api/auth/register', { 
@@ -76,7 +78,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email, 
         password,
         phone,
-        address
+        address,
+        bio
       });
       
       const userData = {
@@ -85,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: response.data.email,
         phone: response.data.phone,
         address: response.data.address,
+        bio: response.data.bio,
         role: response.data.role
       };
 

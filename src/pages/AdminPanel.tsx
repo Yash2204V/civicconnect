@@ -801,7 +801,11 @@ const AdminPanel = () => {
                               <div className='flex gap-4 justify-center items-center'>
                                 <div className="flex space-x-1 justify-center items-center gap-2">
                                   <button
-                                    onClick={() => handleDeleteClick(post._id)}
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // Prevents the event from bubbling up
+                                      handleDeleteClick(post._id);
+                                      setSelectedPost(null);
+                                    }}
                                     className="p-1.5 bg-white bg-opacity-80 rounded-full text-red-500 hover:text-red-700 hover:bg-opacity-100 transition-colors duration-200 shadow-sm dark:bg-gray-700 dark:text-red-400 dark:hover:bg-gray-600"
                                   >
                                     <Trash2 className="h-4 w-4" />
