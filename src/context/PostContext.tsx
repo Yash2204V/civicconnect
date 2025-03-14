@@ -65,7 +65,9 @@ interface PostContextType {
   createPost: (postData: NewPost) => Promise<Post>;
   updatePost: (postId: string, postData: UpdatePost) => Promise<Post>;
   deletePost: (postId: string) => Promise<void>;
+  adminDeletePost: (postId: string) => Promise<void>;
   addComment: (postId: string, text: string) => Promise<Comment>;
+  adminAddComment: (postId: string, text: string) => Promise<Comment>;
   votePost: (postId: string) => Promise<Post>;
   updatePostStatus: (postId: string, status: Post['status']) => Promise<Post>;
 }
@@ -251,20 +253,59 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Delete a post
   const deletePost = async (postId: string): Promise<void> => {
     // Check if already authenticated
-    const isAdminAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
+    // const isAdminAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
     // console.log("isAdminAuthenticated", isAdminAuthenticated);
-    
-    if (!isAdminAuthenticated && !isAuthenticated) {
+
+    if (!isAuthenticated) {
       throw new Error('You must be logged in to delete a post');
     }
-    // if (!isAuthenticated) {
-    //   throw new Error('You must be logged in to delete a post');
-    // }
 
     setLoading(true);
     setError(null);
     try {
       await axios.delete(`${API_URL}/posts/${postId}`);
+
+      // Remove post from states
+      setPosts(prevPosts => prevPosts.filter(post => post._id !== postId));
+      setUserPosts(prevPosts => prevPosts.filter(post => post._id !== postId));
+    } catch (err) {
+      console.error('Error deleting post:', err);
+      setError('Failed to delete post. Please try again later.');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Admin delete a post
+  const adminDeletePost = async (postId: string): Promise<void> => {
+    // For admin operations, we'll use the admin authentication from sessionStorage
+    const isAdminAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
+
+    if (!isAdminAuthenticated && (!isAuthenticated || user?.role !== 'admin')) {
+      throw new Error('You must be an admin to update post status');
+    }
+
+    try {
+      // Store the original authorization header
+      const originalAuth = axios.defaults.headers.common['Authorization'];
+
+      // Set admin authentication in headers for the API call
+      if (isAdminAuthenticated) {
+        axios.defaults.headers.common['Authorization'] = 'admin-user-id';
+      }
+
+      setLoading(true);
+      setError(null);
+      await axios.delete(`${API_URL}/posts/admin/${postId}`);
+
+      // Restore the original authorization header
+      if (originalAuth) {
+        axios.defaults.headers.common['Authorization'] = originalAuth;
+      } else {
+        delete axios.defaults.headers.common['Authorization'];
+      }
+
 
       // Remove post from states
       setPosts(prevPosts => prevPosts.filter(post => post._id !== postId));
@@ -314,6 +355,72 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return post;
         })
       );
+
+      return response.data;
+    } catch (err) {
+      console.error('Error adding comment:', err);
+      setError('Failed to add comment. Please try again later.');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add a comment to a post (only admin)
+  const adminAddComment = async (postId: string, text: string): Promise<Comment> => {
+    // For admin operations, we'll use the admin authentication from sessionStorage
+    const isAdminAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
+
+    if (!isAdminAuthenticated && (!isAuthenticated || user?.role !== 'admin')) {
+      throw new Error('You must be an admin to update post status');
+    }
+
+    try {
+      // Store the original authorization header
+      const originalAuth = axios.defaults.headers.common['Authorization'];
+
+      // Set admin authentication in headers for the API call
+      if (isAdminAuthenticated) {
+        axios.defaults.headers.common['Authorization'] = 'admin-user-id';
+      }
+
+      setLoading(true);
+      setError(null);
+
+      const response = await axios.post(`${API_URL}/posts/admin/${postId}/comment`, { text });
+
+      // Update the posts state with the new comment
+      setPosts(prevPosts =>
+        prevPosts.map(post => {
+          if (post._id === postId) {
+            return {
+              ...post,
+              comments: [...(post.comments || []), response.data]
+            };
+          }
+          return post;
+        })
+      );
+
+      // Update user posts if applicable
+      setUserPosts(prevPosts =>
+        prevPosts.map(post => {
+          if (post._id === postId) {
+            return {
+              ...post,
+              comments: [...(post.comments || []), response.data]
+            };
+          }
+          return post;
+        })
+      );
+
+      // Restore the original authorization header
+      if (originalAuth) {
+        axios.defaults.headers.common['Authorization'] = originalAuth;
+      } else {
+        delete axios.defaults.headers.common['Authorization'];
+      }
 
       return response.data;
     } catch (err) {
@@ -455,7 +562,9 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
         createPost,
         updatePost,
         deletePost,
+        adminDeletePost,
         addComment,
+        adminAddComment,
         votePost,
         updatePostStatus
       }}

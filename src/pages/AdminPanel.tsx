@@ -80,7 +80,7 @@ interface StatusData {
 
 const AdminPanel = () => {
   const navigate = useNavigate();
-  const { posts, loading, error, fetchPosts, updatePostStatus, deletePost } = usePosts();
+  const { posts, loading, error, fetchPosts, updatePostStatus, adminDeletePost } = usePosts();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
@@ -116,7 +116,7 @@ const AdminPanel = () => {
   const handleDeletePost = async () => {
     if (!postToDelete) return;
     try {
-      await deletePost(postToDelete);
+      await adminDeletePost(postToDelete);
       setShowDeleteConfirm(false);
       setPostToDelete(null);
     } catch (error) {
