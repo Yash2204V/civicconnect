@@ -404,7 +404,7 @@ const Dashboard = () => {
     { id: 1, type: 'vote', message: 'Your issue received a new vote', time: '2 min ago' },
     { id: 2, type: 'comment', message: 'Someone commented on your post', time: '1 hour ago' },
     { id: 3, type: 'status', message: 'Your issue status was updated', time: '3 hours ago' },
-    { id: 4, type: 'system', message: 'Welcome to CivicConnect!', time: '1 day ago' },
+    { id: 4, type: 'system', message: 'Welcome to 109Cops!', time: '1 day ago' },
   ];
 
   return (
@@ -440,7 +440,7 @@ const Dashboard = () => {
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 1.5, repeat: 1 }}
               >
-                CivicConnect
+                109Cops
               </motion.h1>
               <motion.p
                 className="text-white text-xl text-shadow-lg"
@@ -464,7 +464,7 @@ const Dashboard = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <span className={`text-2xl font-bold ${scrollPosition > 50 ? 'text-gradient-primary' : 'text-white text-shadow-lg'
-                }`}>CivicConnect</span>
+                }`}>109Cops</span>
             </div>
 
             {/* Desktop Navigation */}
@@ -1540,7 +1540,7 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-2xl font-bold text-gradient-secondary mb-4">CivicConnect</h3>
+              <h3 className="text-2xl font-bold text-gradient-secondary mb-4">109Cops</h3>
               <p className="text-gray-400 mb-4">
                 Empowering communities through collaboration and civic engagement.
               </p>
@@ -1597,7 +1597,7 @@ const Dashboard = () => {
 
           <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              © 2025 CivicConnect. All rights reserved.
+              © 2025 109Cops. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors duration-200">Privacy Policy</a>

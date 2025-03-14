@@ -119,7 +119,7 @@ const Login = () => {
                 {isRegistering ? 'Create an Account' : 'Welcome Back'}
               </h2>
               <p className="text-center text-gray-600 mb-8">
-                {isRegistering ? 'Join CivicConnect today' : 'Sign in to CivicConnect'}
+                {isRegistering ? 'Join 109Cops today' : 'Sign in to 109Cops'}
               </p>
             </motion.div>
             

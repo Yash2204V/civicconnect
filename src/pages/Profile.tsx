@@ -2,7 +2,6 @@ import { useAuth } from '../context/AuthContext';
 import React, { useState, useEffect } from 'react';
 import {
   Upload,
-  Loader,
   X,
   Settings,
   LogOut,
@@ -23,8 +22,6 @@ import {
   ChevronUp,
   Calendar,
   MessageCircle,
-  Share2,
-  Eye,
   Award,
   TrendingUp
 } from 'lucide-react';
