@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   AlertTriangle,
   Clock,
@@ -23,11 +23,13 @@ import {
   Calendar,
   Layers,
   Zap,
-  Sparkles
+  Sparkles,
+  Trash2
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePosts } from '../context/PostContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 interface Post {
   _id: string;
@@ -47,6 +49,8 @@ interface Post {
     _id: string;
     name: string;
     email?: string;
+    phone?: number;
+    address?: string;
   };
   createdAt: string;
   comments: Comment[];
@@ -76,7 +80,9 @@ interface StatusData {
 
 const AdminPanel = () => {
   const navigate = useNavigate();
-  const { posts, loading, error, fetchPosts, updatePostStatus } = usePosts();
+  const { posts, loading, error, fetchPosts, updatePostStatus, adminDeletePost } = usePosts();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('votes');
@@ -93,6 +99,31 @@ const AdminPanel = () => {
 
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
   const filtersRef = useRef<HTMLDivElement>(null);
+
+  const confirmDeletePost = () => {
+    // In a real app, this would delete the post
+    // For now, we'll just show a success message
+    alert('Post deleted successfully!');
+    setShowDeleteConfirm(false);
+    setPostToDelete(null);
+  };
+
+  const handleDeleteClick = (postId: string) => {
+    setPostToDelete(postId);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeletePost = async () => {
+    if (!postToDelete) return;
+    try {
+      await adminDeletePost(postToDelete);
+      setShowDeleteConfirm(false);
+      setPostToDelete(null);
+    } catch (error) {
+      console.error('Error deleting post:', error);
+    }
+  };
+
 
   // Check if admin is authenticated
   useEffect(() => {
@@ -210,13 +241,13 @@ const AdminPanel = () => {
   const getStatusColor = (status: Post['status']) => {
     switch (status) {
       case 'posted':
-        return '#f59e0b';
+        return '#fcd34d';
       case 'waitlist':
-        return '#f97316';
+        return '#fdba74';
       case 'in_progress':
-        return '#3b82f6';
+        return '#93c5fd';
       case 'completed':
-        return '#10b981';
+        return '#6ee7b7';
     }
   };
 
@@ -311,12 +342,12 @@ const AdminPanel = () => {
   ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 10);
 
   return (
-    <div className="min-h-screen bg-gray-50 bg-dot-pattern">
+    <div className="min-h-screen bg-gray-50 bg-dot-pattern dark:bg-gray-800 dark:cinematic-bg-pattern dark:border dark:border-gray-700">
       {/* Intro Animation */}
       <AnimatePresence>
         {showIntro && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-primary"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-primary "
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
@@ -359,7 +390,7 @@ const AdminPanel = () => {
       </AnimatePresence>
 
       {/* Header */}
-      <div className="bg-white bg-opacity-90 backdrop-blur-md border-b shadow-sm sticky top-0 z-40">
+      <div className="bg-white bg-opacity-90 backdrop-blur-md border-b shadow-sm sticky top-0 z-40 dark:bg-gray-800 dark:cinematic-bg-pattern dark:border dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
@@ -369,6 +400,7 @@ const AdminPanel = () => {
               <h1 className="text-2xl font-bold text-gradient-primary">Admin Dashboard</h1>
             </div>
             <div className="flex items-center space-x-4">
+              <ThemeToggle />
               <button
                 onClick={() => setShowStats(!showStats)}
                 className="p-2 rounded-full hover:bg-indigo-50 transition-colors duration-200 text-indigo-600"
@@ -403,54 +435,54 @@ const AdminPanel = () => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-white border-b"
+            className="bg-white border-b dark:bg-gray-800 dark:border dark:border-gray-700"
           >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 dark:bg-gray-800 dark:border dark:border-gray-700">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-gradient-to-br from-amber-50 to-amber-100 p-4 rounded-xl shadow-sm">
-                  <div className="flex items-center mb-2">
+                <div className="bg-amber-100 p-4 rounded-xl shadow-sm  dark:bg-gray-800 dark:border dark:border-gray-700">
+                  <div className="flex items-center mb-2 ">
                     <div className="p-2 rounded-full bg-amber-200 text-amber-700">
                       <Layers className="h-5 w-5" />
                     </div>
-                    <h3 className="ml-2 font-semibold text-amber-900">Total Issues</h3>
+                    <h3 className="ml-2 font-semibold dark:text-amber-400 text-amber-900">Total Issues</h3>
                   </div>
-                  <p className="text-2xl font-bold text-amber-900">{totalIssues}</p>
+                  <p className="text-2xl font-bold dark:text-amber-400 text-amber-900">{totalIssues}</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 rounded-xl shadow-sm">
+                <div className="bg-emerald-100 p-4 rounded-xl shadow-sm dark:bg-gray-800 dark:border dark:border-gray-700">
                   <div className="flex items-center mb-2">
                     <div className="p-2 rounded-full bg-emerald-200 text-emerald-700">
                       <CheckCircle className="h-5 w-5" />
                     </div>
-                    <h3 className="ml-2 font-semibold text-emerald-900">Resolved</h3>
+                    <h3 className="ml-2 font-semibold dark:text-emerald-300 text-emerald-900">Resolved</h3>
                   </div>
-                  <p className="text-2xl font-bold text-emerald-900">{resolvedIssues}</p>
+                  <p className="text-2xl font-bold dark:text-emerald-300 text-emerald-900">{resolvedIssues}</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl shadow-sm">
+                <div className="bg-blue-100 p-4 rounded-xl shadow-sm dark:bg-gray-800 dark:border dark:border-gray-700">
                   <div className="flex items-center mb-2">
                     <div className="p-2 rounded-full bg-blue-200 text-blue-700">
                       <Users className="h-5 w-5" />
                     </div>
-                    <h3 className="ml-2 font-semibold text-blue-900">Users</h3>
+                    <h3 className="ml-2 font-semibold text-blue-900 dark:text-blue-400">Users</h3>
                   </div>
-                  <p className="text-2xl font-bold text-blue-900">{uniqueUsers}</p>
+                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-400">{uniqueUsers}</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl shadow-sm">
+                <div className="bg-purple-100 p-4 rounded-xl shadow-sm dark:bg-gray-800 dark:border dark:border-gray-700">
                   <div className="flex items-center mb-2">
-                    <div className="p-2 rounded-full bg-purple-200 text-purple-700">
+                    <div className="p-2 rounded-full bg-purple-200 text-purple-700 dark:text-purple-900">
                       <MessageCircle className="h-5 w-5" />
                     </div>
-                    <h3 className="ml-2 font-semibold text-purple-900">Engagement</h3>
+                    <h3 className="ml-2 font-semibold text-purple-900 dark:text-purple-300">Engagement</h3>
                   </div>
-                  <p className="text-2xl font-bold text-purple-900">{totalVotes + totalComments}</p>
+                  <p className="text-2xl font-bold text-purple-900 dark:text-purple-300">{totalVotes + totalComments}</p>
                 </div>
               </div>
-
+              {/* ---------------------------------------------------------------------------- */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                  <h3 className="font-semibold text-gray-900 mb-4">Issue Status Distribution</h3>
+                <div className="bg-white dark:bg-gray-800 dark:border dark:border-gray-700 p-4 rounded-xl shadow-sm border border-gray-100">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-50 mb-4">Issue Status Distribution</h3>
                   <div className="flex items-center space-x-2 mb-4">
                     {statusData.map((status) => (
                       <div
@@ -471,17 +503,17 @@ const AdminPanel = () => {
                           className="h-3 w-3 rounded-full mr-2"
                           style={{ backgroundColor: status.color }}
                         ></div>
-                        <span className="text-xs text-gray-600">{status.name}: {status.count}</span>
+                        <span className="text-xs text-gray-600 dark:text-gray-50">{status.name}: {status.count}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                  <h3 className="font-semibold text-gray-900 mb-4">Top Categories</h3>
+                <div className="bg-white dark:bg-gray-800 dark:border dark:border-gray-700 p-4 rounded-xl shadow-sm border border-gray-100">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-50 mb-4">Top Categories</h3>
                   {categoryData.map((category, index) => (
                     <div key={category.name} className="mb-2">
-                      <div className="flex justify-between text-xs text-gray-600 mb-1">
+                      <div className="flex justify-between text-xs text-gray-600 dark:text-gray-50 mb-1">
                         <span>{category.name}</span>
                         <span>{category.count} issues</span>
                       </div>
@@ -506,18 +538,18 @@ const AdminPanel = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tabs */}
-        <div className="flex border-b mb-6">
+        <div className="flex border-b mb-6 dark:border-gray-700">
           <button
             onClick={() => setActiveTab('issues')}
             className={`py-2 px-4 font-medium relative ${activeTab === 'issues'
-                ? 'text-indigo-600'
-                : 'text-gray-500 hover:text-gray-700'
+              ? 'text-indigo-600 dark:text-indigo-400'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
               }`}
           >
             Issues Management
             {activeTab === 'issues' && (
               <motion.div
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400"
                 layoutId="adminActiveTab"
               />
             )}
@@ -525,19 +557,68 @@ const AdminPanel = () => {
           <button
             onClick={() => setActiveTab('activity')}
             className={`py-2 px-4 font-medium relative ${activeTab === 'activity'
-                ? 'text-indigo-600'
-                : 'text-gray-500 hover:text-gray-700'
+              ? 'text-indigo-600 dark:text-indigo-400'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
               }`}
           >
             Recent Activity
             {activeTab === 'activity' && (
               <motion.div
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400"
                 layoutId="adminActiveTab"
               />
             )}
           </button>
         </div>
+
+        {/* Delete Confirmation Modal */}
+        <AnimatePresence>
+          {showDeleteConfirm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-white rounded-xl p-6 max-w-md w-full dark:bg-gray-800"
+              >
+                <div className="flex items-center justify-center mb-4">
+                  <div className="bg-red-100 rounded-full p-3 dark:bg-red-200">
+                    <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-700" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 text-center mb-2 dark:text-gray-100">
+                  Delete Post
+                </h3>
+                <p className="text-gray-500 text-center mb-6 dark:text-gray-400">
+                  Are you sure you want to delete this post? This action cannot be undone.
+                </p>
+                <div className="flex justify-center space-x-3">
+                  <button
+                    onClick={() => postToDelete && handleDeletePost()}
+                    className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors duration-200 dark:bg-red-700 dark:hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setPostToDelete(null);
+                    }}
+                    className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors duration-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
 
         <AnimatePresence mode="wait">
           {activeTab === 'issues' && (
@@ -551,31 +632,31 @@ const AdminPanel = () => {
               <div className="flex flex-col md:flex-row gap-6">
                 {/* Left Column - Posts List */}
                 <div className="md:w-1/2 lg:w-2/3">
-                  <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+                  <div className="bg-white rounded-xl shadow-sm p-4 mb-6 dark:bg-gray-800 dark:border dark:border-gray-700">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-                      <h2 className="text-xl font-semibold text-gray-900 mb-2 sm:mb-0">Community Issues</h2>
+                      <h2 className="text-xl font-semibold text-gray-900 mb-2 sm:mb-0 dark:text-gray-100">Community Issues</h2>
                       <div className="flex space-x-2 w-full sm:w-auto">
                         <div className="relative flex-1 sm:flex-none">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400 h-4 w-4" />
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400 h-4 w-4 dark:text-indigo-500" />
                           <input
                             type="text"
                             placeholder="Search..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 pr-4 py-2 border border-indigo-100 rounded-lg bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm w-full"
+                            className="pl-9 pr-4 py-2 border border-indigo-100 rounded-lg bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm w-full dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                           />
                         </div>
                         <div className="relative" ref={filtersRef}>
                           <button
                             onClick={() => setShowFilters(!showFilters)}
-                            className="flex items-center space-x-2 px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                            className="flex items-center space-x-2 px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                           >
-                            <Filter className="h-4 w-4 text-gray-500" />
-                            <span className="text-sm font-medium">Sort</span>
+                            <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                            <span className="text-sm font-medium dark:text-gray-300">Sort</span>
                           </button>
 
                           {showFilters && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg z-50 border border-gray-100 overflow-hidden">
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg z-50 border border-gray-100 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
                               <div className="p-2">
                                 {[
                                   { value: 'votes', label: 'Most Votes', icon: <ThumbsUp className="h-4 w-4" /> },
@@ -585,7 +666,9 @@ const AdminPanel = () => {
                                 ].map((option) => (
                                   <div
                                     key={option.value}
-                                    className={`flex items-center px-3 py-2 hover:bg-indigo-50 rounded-lg cursor-pointer ${sortBy === option.value ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700'
+                                    className={`flex items-center px-3 py-2 hover:bg-indigo-50 rounded-lg cursor-pointer ${sortBy === option.value
+                                      ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300'
+                                      : 'text-gray-700 dark:text-gray-300'
                                       }`}
                                     onClick={() => {
                                       setSortBy(option.value);
@@ -612,8 +695,8 @@ const AdminPanel = () => {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${filter === status
-                              ? 'bg-gradient-primary text-white shadow-md'
-                              : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                            ? 'bg-gradient-primary text-white shadow-md'
+                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:border-gray-600'
                             } transition-colors duration-200`}
                         >
                           {status === 'all' ? 'All Issues' : getStatusText(status as Post['status'])}
@@ -626,46 +709,46 @@ const AdminPanel = () => {
                       <div className="relative" ref={categoryDropdownRef}>
                         <button
                           onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                          className="flex items-center justify-between w-full px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm"
+                          className="flex items-center justify-between w-full px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-300"
                         >
                           <span className="font-medium truncate">
                             {selectedCategories.length === 0
                               ? 'Filter by Category'
                               : `${selectedCategories.length} categories selected`}
                           </span>
-                          <ChevronDown className="h-4 w-4 text-gray-500" />
+                          <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                         </button>
 
                         {showCategoryDropdown && (
-                          <div className="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg z-50 border border-gray-100 overflow-hidden">
+                          <div className="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg z-50 border border-gray-100 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
                             <div className="p-2 max-h-60 overflow-y-auto custom-scrollbar">
                               {Array.from(new Set(posts.map(post => post.category))).map((cat) => (
                                 <div
                                   key={cat}
-                                  className="flex items-center px-3 py-2 hover:bg-indigo-50 rounded-lg cursor-pointer"
+                                  className="flex items-center px-3 py-2 hover:bg-indigo-50 rounded-lg cursor-pointer dark:hover:bg-indigo-900"
                                   onClick={() => toggleCategorySelection(cat)}
                                 >
                                   <input
                                     type="checkbox"
                                     checked={selectedCategories.includes(cat)}
                                     onChange={() => { }}
-                                    className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                    className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600"
                                   />
-                                  <span className="ml-2 text-sm">{cat}</span>
+                                  <span className="ml-2 text-sm dark:text-gray-300">{cat}</span>
                                 </div>
                               ))}
                             </div>
                             {selectedCategories.length > 0 && (
-                              <div className="border-t p-2 flex justify-between">
+                              <div className="border-t p-2 flex justify-between dark:border-gray-700">
                                 <button
                                   onClick={() => setSelectedCategories([])}
-                                  className="text-xs text-gray-500 hover:text-gray-700"
+                                  className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                                 >
                                   Clear all
                                 </button>
                                 <button
                                   onClick={() => setShowCategoryDropdown(false)}
-                                  className="text-xs text-indigo-600 font-medium hover:text-indigo-800"
+                                  className="text-xs text-indigo-600 font-medium hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
                                 >
                                   Apply
                                 </button>
@@ -688,11 +771,11 @@ const AdminPanel = () => {
 
                     {/* Error State */}
                     {error && (
-                      <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-lg mb-6">
+                      <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-lg mb-6 dark:bg-red-900 dark:border-red-800 dark:text-red-100">
                         <p className="font-medium">{error}</p>
                         <button
                           onClick={() => fetchPosts()}
-                          className="mt-2 text-sm font-medium underline"
+                          className="mt-2 text-sm font-medium underline dark:text-red-200"
                         >
                           Try again
                         </button>
@@ -707,37 +790,51 @@ const AdminPanel = () => {
                             key={post._id}
                             onClick={() => setSelectedPost(post)}
                             className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedPost?._id === post._id
-                                ? 'border-indigo-500 bg-indigo-50'
-                                : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/30'
+                              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
+                              : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/30 dark:border-gray-700 dark:hover:border-indigo-500 dark:hover:bg-indigo-900/20'
                               }`}
                             whileHover={{ scale: 1.01 }}
                             whileTap={{ scale: 0.99 }}
                           >
                             <div className="flex justify-between items-start mb-2">
-                              <h3 className="font-medium text-gray-900">{post.title}</h3>
-                              <span className={`status-badge ${getStatusClass(post.status)}`}>
-                                {getStatusIcon(post.status)}
-                                <span className="ml-1 capitalize">{post.status.replace('_', ' ')}</span>
-                              </span>
+                              <h3 className="font-medium text-gray-900 dark:text-gray-100">{post.title}</h3>
+                              <div className='flex gap-4 justify-center items-center'>
+                                <div className="flex space-x-1 justify-center items-center gap-2">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // Prevents the event from bubbling up
+                                      handleDeleteClick(post._id);
+                                      setSelectedPost(null);
+                                    }}
+                                    className="p-1.5 bg-white bg-opacity-80 rounded-full text-red-500 hover:text-red-700 hover:bg-opacity-100 transition-colors duration-200 shadow-sm dark:bg-gray-700 dark:text-red-400 dark:hover:bg-gray-600"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+                                <span className={`status-badge ${getStatusClass(post.status)} dark:bg-gray-200`}>
+                                  {getStatusIcon(post.status)}
+                                  <span className="ml-1 capitalize">{post.status.replace('_', ' ')}</span>
+                                </span>
+                              </div>
                             </div>
 
-                            <p className="text-gray-600 text-sm mb-2 line-clamp-2">{post.description}</p>
+                            <p className="text-gray-600 text-sm mb-2 line-clamp-2 dark:text-gray-300">{post.description}</p>
 
                             <div className="flex flex-wrap gap-2 mb-2">
                               {post.category && (
-                                <span className="category-badge">
+                                <span className="category-badge dark:bg-gray-700 dark:text-gray-100">
                                   {post.category}
                                 </span>
                               )}
                               {post.location && (
-                                <span className="location-badge">
+                                <span className="location-badge dark:bg-gray-700 dark:text-gray-100">
                                   <MapPin className="h-3 w-3 mr-1" />
                                   {post.location}
                                 </span>
                               )}
                             </div>
 
-                            <div className="flex justify-between items-center text-xs text-gray-500">
+                            <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
                               <div className="flex items-center">
                                 <div className="h-5 w-5 rounded-full bg-gradient-secondary flex items-center justify-center text-white font-medium shadow-sm mr-1">
                                   {post.user.name.charAt(0).toUpperCase()}
@@ -746,11 +843,11 @@ const AdminPanel = () => {
                               </div>
                               <div className="flex items-center space-x-3">
                                 <span className="flex items-center">
-                                  <ThumbsUp className="h-3 w-3 mr-1 text-indigo-500" />
+                                  <ThumbsUp className="h-3 w-3 mr-1 text-indigo-500 dark:text-indigo-400" />
                                   {post.votes.length}
                                 </span>
                                 <span className="flex items-center">
-                                  <MessageCircle className="h-3 w-3 mr-1 text-indigo-500" />
+                                  <MessageCircle className="h-3 w-3 mr-1 text-indigo-500 dark:text-indigo-400" />
                                   {post.comments.length}
                                 </span>
                                 <span>{new Date(post.createdAt).toLocaleDateString()}</span>
@@ -761,9 +858,9 @@ const AdminPanel = () => {
                       </div>
                     ) : !loading && (
                       <div className="text-center py-10">
-                        <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900">No issues found</h3>
-                        <p className="text-gray-500 mt-2">Try adjusting your search or filter criteria</p>
+                        <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4 dark:text-gray-500" />
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">No issues found</h3>
+                        <p className="text-gray-500 mt-2 dark:text-gray-400">Try adjusting your search or filter criteria</p>
                       </div>
                     )}
                   </div>
@@ -772,15 +869,14 @@ const AdminPanel = () => {
                 {/* Right Column - Post Details */}
                 <div className="md:w-1/2 lg:w-1/3">
                   {selectedPost ? (
-                    <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24">
+                    <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24 dark:bg-gray-700 dark:border dark:border-gray-700">
                       <div className="flex justify-between items-start mb-4">
-                        <h2 className="text-xl font-semibold text-gray-900">{selectedPost.title}</h2>
-                        <span className={`status-badge ${getStatusClass(selectedPost.status)}`}>
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{selectedPost.title}</h2>
+                        <span className={`status-badge ${getStatusClass(selectedPost.status)} dark:bg-gray-300`}>
                           {getStatusIcon(selectedPost.status)}
                           <span className="ml-1 capitalize">{selectedPost.status.replace('_', ' ')}</span>
                         </span>
                       </div>
-
 
                       {/* Media */}
                       {selectedPost.media && (
@@ -802,41 +898,69 @@ const AdminPanel = () => {
                       )}
 
                       <div className="mb-4">
-                        <h3 className="font-medium text-gray-900 mb-1">Description</h3>
-                        <p className="text-gray-700">{selectedPost.description}</p>
+                        <h3 className="font-medium text-gray-900 mb-1 dark:text-gray-100">Description</h3>
+                        <p className="text-gray-700 dark:text-gray-300">{selectedPost.description}</p>
                       </div>
 
                       <div className="flex flex-wrap gap-2 mb-4">
                         {selectedPost.category && (
-                          <span className="category-badge">
+                          <span className="category-badge dark:bg-gray-700 dark:text-gray-100">
                             {selectedPost.category}
                           </span>
                         )}
                         {selectedPost.location && (
-                          <span className="location-badge">
+                          <span className="location-badge dark:bg-gray-700 dark:text-gray-100">
                             <MapPin className="h-3 w-3 mr-1" />
                             {selectedPost.location}
                           </span>
                         )}
                       </div>
 
-                      <div className="mb-6">
-                        <h3 className="font-medium text-gray-900 mb-1">Reported by</h3>
-                        <div className="flex items-center">
-                          <div className="h-8 w-8 rounded-full bg-gradient-secondary flex items-center justify-center text-white font-medium shadow-sm mr-2">
-                            {selectedPost.user.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{selectedPost.user.name}</p>
-                            <p className="text-xs text-gray-500">
-                              {selectedPost.user.email || 'No email provided'}
-                            </p>
+                      <div className="mb-8">
+                        <h3 className="font-medium text-gray-900 mb-3 dark:text-gray-100">Reported by</h3>
+                        <div className="p-4 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+                          <div className="flex flex-col items-center sm:flex-row sm:items-start">
+                            {/* Avatar */}
+                            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white font-medium shadow-lg mb-3 sm:mb-0 sm:mr-4">
+                              {selectedPost.user.name.charAt(0).toUpperCase()}
+                            </div>
+
+                            {/* User Details */}
+                            <div className="text-center sm:text-left">
+                              <p className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                                {selectedPost.user.name}
+                              </p>
+
+                              <div className="space-y-1 mt-2">
+                                <div className="flex items-center justify-center sm:justify-start text-gray-600 dark:text-gray-400">
+                                  <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                                  </svg>
+                                  <span className="text-sm">{selectedPost.user.email || 'No email provided'}</span>
+                                </div>
+
+                                <div className="flex items-center justify-center sm:justify-start text-gray-600 dark:text-gray-400">
+                                  <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                                  </svg>
+                                  <span className="text-sm">{selectedPost.user.phone || 'No phone provided'}</span>
+                                </div>
+
+                                <div className="flex items-center justify-center sm:justify-start text-gray-600 dark:text-gray-400">
+                                  <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                  </svg>
+                                  <span className="text-sm">{selectedPost.user.address || 'No address provided'}</span>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
 
                       <div className="mb-6">
-                        <h3 className="font-medium text-gray-900 mb-2">Update Status</h3>
+                        <h3 className="font-medium text-gray-900 mb-2 dark:text-gray-100">Update Status</h3>
                         <div className="grid grid-cols-2 gap-2">
                           {['posted', 'waitlist', 'in_progress', 'completed'].map((status) => (
                             <motion.button
@@ -846,8 +970,8 @@ const AdminPanel = () => {
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                               className={`py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center ${selectedPost.status === status
-                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                  : `${getStatusClass(status as Post['status'])} hover:opacity-90`
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400'
+                                : `${getStatusClass(status as Post['status'])} hover:opacity-90`
                                 } transition-colors duration-200`}
                             >
                               {getStatusIcon(status as Post['status'])}
@@ -859,7 +983,7 @@ const AdminPanel = () => {
 
                       {/* Comments Section */}
                       <div>
-                        <h3 className="font-medium text-gray-900 mb-2">Comments ({selectedPost.comments.length})</h3>
+                        <h3 className="font-medium text-gray-900 mb-2 dark:text-gray-100">Comments ({selectedPost.comments.length})</h3>
                         {selectedPost.comments.length > 0 ? (
                           <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar pr-2 mb-4">
                             {selectedPost.comments.map((comment) => (
@@ -868,11 +992,11 @@ const AdminPanel = () => {
                                   {comment.user.name.charAt(0).toUpperCase()}
                                 </div>
                                 <div className="flex-1">
-                                  <div className="bg-gray-50 p-3 rounded-lg">
-                                    <p className="font-medium text-sm text-gray-900">{comment.user.name}</p>
-                                    <p className="text-gray-700 text-sm">{comment.text}</p>
+                                  <div className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
+                                    <p className="font-medium text-sm text-gray-900 dark:text-gray-100">{comment.user.name}</p>
+                                    <p className="text-gray-700 text-sm dark:text-gray-300">{comment.text}</p>
                                   </div>
-                                  <p className="text-xs text-gray-500 mt-1">
+                                  <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">
                                     {new Date(comment.createdAt).toLocaleString(undefined, {
                                       month: 'short',
                                       day: 'numeric',
@@ -885,7 +1009,7 @@ const AdminPanel = () => {
                             ))}
                           </div>
                         ) : (
-                          <p className="text-gray-500 text-sm mb-4">No comments yet.</p>
+                          <p className="text-gray-500 text-sm mb-4 dark:text-gray-400">No comments yet.</p>
                         )}
 
                         {/* Add Comment */}
@@ -899,10 +1023,10 @@ const AdminPanel = () => {
                               value={commentText}
                               onChange={(e) => setCommentText(e.target.value)}
                               placeholder="Add an admin comment..."
-                              className="flex-1 bg-gray-50 border border-gray-200 rounded-l-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                              className="flex-1 bg-gray-50 border border-gray-200 rounded-l-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                             />
                             <motion.button
-                              className="bg-gradient-primary text-white px-3 py-2 rounded-r-lg transition-colors duration-200"
+                              className="bg-gradient-primary text-white px-3 py-2 rounded-r-lg transition-colors duration-200 dark:bg-indigo-700 dark:hover:bg-indigo-600"
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                             >
@@ -913,15 +1037,15 @@ const AdminPanel = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-white rounded-xl shadow-sm p-6 text-center">
+                    <div className="bg-white rounded-xl shadow-sm p-6 text-center dark:bg-gray-800 dark:border dark:border-gray-700">
                       <div className="mb-6 relative">
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="h-32 w-32 rounded-full bg-indigo-100 animate-pulse-slow"></div>
+                          <div className="h-24 w-24 rounded-full bg-indigo-100 animate-pulse-slow dark:bg-indigo-900"></div>
                         </div>
-                        <AlertTriangle className="h-16 w-16 text-indigo-400 mx-auto relative z-10" />
+                        <AlertTriangle className="h-16 w-16 text-indigo-400 mx-auto relative z-10 dark:text-indigo-500" />
                       </div>
-                      <h3 className="text-lg font-medium text-gray-900">No issue selected</h3>
-                      <p className="text-gray-500 mt-2">Select an issue from the list to view details</p>
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">No issue selected</h3>
+                      <p className="text-gray-500 mt-2 dark:text-gray-400">Select an issue from the list to view details</p>
                     </div>
                   )}
                 </div>
@@ -936,19 +1060,19 @@ const AdminPanel = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="bg-white rounded-xl shadow-sm p-6"
+              className="bg-white rounded-xl shadow-sm p-6 dark:bg-gray-800 dark:border dark:border-gray-700"
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">Recent Activity</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-6 dark:text-gray-100">Recent Activity</h3>
 
               <div className="space-y-6">
                 {recentActivity.map((activity, index) => (
                   <div key={index} className="flex">
                     <div className="mr-4 relative">
                       <div className={`h-10 w-10 rounded-full flex items-center justify-center ${activity.type === 'post'
-                          ? 'bg-indigo-100 text-indigo-600'
-                          : activity.type === 'comment'
-                            ? 'bg-purple-100 text-purple-600'
-                            : 'bg-blue-100 text-blue-600'
+                        ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300'
+                        : activity.type === 'comment'
+                          ? 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300'
+                          : 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'
                         }`}>
                         {activity.type === 'post'
                           ? <Layers className="h-5 w-5" />
@@ -958,13 +1082,13 @@ const AdminPanel = () => {
                         }
                       </div>
                       {index < recentActivity.length - 1 && (
-                        <div className="absolute top-10 bottom-0 left-1/2 w-0.5 -ml-px bg-gray-200 h-full"></div>
+                        <div className="absolute top-10 bottom-0 left-1/2 w-0.5 -ml-px bg-gray-200 h-full dark:bg-gray-700"></div>
                       )}
                     </div>
                     <div className="flex-1 pb-6">
-                      <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="bg-gray-50 p-4 rounded-lg dark:bg-gray-700">
                         <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium text-gray-900">
+                          <h4 className="font-medium text-gray-900 dark:text-gray-100">
                             {activity.type === 'post'
                               ? 'New Issue Reported'
                               : activity.type === 'comment'
@@ -972,7 +1096,7 @@ const AdminPanel = () => {
                                 : 'New Vote'
                             }
                           </h4>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
                             {activity.date.toLocaleString(undefined, {
                               month: 'short',
                               day: 'numeric',
@@ -981,7 +1105,7 @@ const AdminPanel = () => {
                             })}
                           </span>
                         </div>
-                        <p className="text-gray-700 mb-2">
+                        <p className="text-gray-700 mb-2 dark:text-gray-300">
                           <span className="font-medium">{activity.user}</span>
                           {activity.type === 'post'
                             ? ' reported a new issue: '
@@ -992,13 +1116,13 @@ const AdminPanel = () => {
                           <span className="font-medium">"{activity.title}"</span>
                         </p>
                         {activity.type === 'comment' && activity.text && (
-                          <p className="text-sm bg-white p-2 rounded border border-gray-100">
+                          <p className="text-sm bg-white p-2 rounded border border-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300">
                             "{activity.text}"
                           </p>
                         )}
                         {activity.type === 'post' && activity.status && (
                           <div className="mt-2">
-                            <span className={`status-badge ${getStatusClass(activity.status as Post['status'])}`}>
+                            <span className={`status-badge ${getStatusClass(activity.status as Post['status'])} `}>
                               {getStatusIcon(activity.status as Post['status'])}
                               <span className="ml-1 capitalize">{activity.status.replace('_', ' ')}</span>
                             </span>

@@ -20,8 +20,8 @@ const upload = multer({
 // Get all posts
 router.get('/', async (req, res) => {
   try {
-    const posts = await Post.find().sort({ createdAt: -1 }).populate('user', 'name email');
-
+    const posts = await Post.find().sort({ createdAt: -1 }).populate('user', 'name email phone address');
+    
     // Get comments for each post and transform media data to base64
     const postsWithComments = await Promise.all(posts.map(async (post) => {
       const comments = await Comment.find({ post: post._id }).populate('user', 'name');
@@ -195,7 +195,42 @@ router.delete('/:id', auth, async (req, res) => {
     }
 
     // Check if user owns the post
-    if (post.user.toString() != req.user.userId) {
+    // if (post.user.toString() != req.user.userId) {
+    //   return res.status(403).json({ message: 'Not authorized to delete this post' });
+    // }
+    if (!req.user.userId) {
+      return res.status(403).json({ message: 'Not authorized to delete this post' });
+    }
+
+    // Delete associated comments and votes
+    await Comment.deleteMany({ post: req.params.id });
+    await Vote.deleteMany({ post: req.params.id });
+
+    // Delete the post
+    await Post.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+// Delete post (admin only)
+router.delete('/admin/:id', adminAuth, async (req, res) => {
+  try {
+    // Find post and verify ownership
+    const post = await Post.findById(req.params.id);
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Check if user owns the post
+    // if (post.user.toString() != req.user.userId) {
+    //   return res.status(403).json({ message: 'Not authorized to delete this post' });
+    // }
+    if (!req.user.userId) {
       return res.status(403).json({ message: 'Not authorized to delete this post' });
     }
 
@@ -311,6 +346,40 @@ router.post('/:id/vote', auth, async (req, res) => {
 
 // Add comment to a post
 router.post('/:id/comment', auth, async (req, res) => {
+  try {
+    const { text } = req.body;
+
+    if (!text) {
+      return res.status(400).json({ message: 'Comment text is required' });
+    }
+
+    const post = await Post.findById(req.params.id);
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Create new comment in comments collection
+    const newComment = new Comment({
+      user: req.user.userId,
+      post: req.params.id,
+      text
+    });
+
+    await newComment.save();
+
+    // Return the new comment
+    const populatedComment = await Comment.findById(newComment._id).populate('user', 'name');
+
+    res.status(201).json(populatedComment);
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Add comment to a post (only admin)
+router.post('/admin/:id/comment', adminAuth, async (req, res) => {
   try {
     const { text } = req.body;
 

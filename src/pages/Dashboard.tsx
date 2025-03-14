@@ -36,6 +36,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { usePosts } from '../context/PostContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 interface Comment {
   _id: string;
@@ -403,11 +404,11 @@ const Dashboard = () => {
     { id: 1, type: 'vote', message: 'Your issue received a new vote', time: '2 min ago' },
     { id: 2, type: 'comment', message: 'Someone commented on your post', time: '1 hour ago' },
     { id: 3, type: 'status', message: 'Your issue status was updated', time: '3 hours ago' },
-    { id: 4, type: 'system', message: 'Welcome to CivicConnect!', time: '1 day ago' },
+    { id: 4, type: 'system', message: 'Welcome to 109Cops!', time: '1 day ago' },
   ];
 
   return (
-    <div className="min-h-screen cinematic-bg-pattern">
+    <div className="min-h-screen cinematic-bg-pattern dark:bg-gray-800 dark:cinematic-bg-pattern dark:border dark:border-gray-700">
       {/* Intro Animation */}
       <AnimatePresence>
         {showIntro && (
@@ -439,7 +440,7 @@ const Dashboard = () => {
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 1.5, repeat: 1 }}
               >
-                CivicConnect
+                109Cops
               </motion.h1>
               <motion.p
                 className="text-white text-xl text-shadow-lg"
@@ -463,7 +464,7 @@ const Dashboard = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <span className={`text-2xl font-bold ${scrollPosition > 50 ? 'text-gradient-primary' : 'text-white text-shadow-lg'
-                }`}>CivicConnect</span>
+                }`}>109Cops</span>
             </div>
 
             {/* Desktop Navigation */}
@@ -482,7 +483,7 @@ const Dashboard = () => {
                     }`}
                 />
               </div>
-
+              <ThemeToggle />
               <button
                 onClick={handleRefresh}
                 className={`p-2 rounded-full transition-colors duration-200 ${scrollPosition > 50
@@ -492,55 +493,6 @@ const Dashboard = () => {
               >
                 <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
               </button>
-
-              {/* Notifications */}
-              <div className="relative" ref={notificationsRef}>
-                <button
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className={`p-2 rounded-full transition-colors duration-200 ${scrollPosition > 50
-                    ? 'text-indigo-500 hover:bg-indigo-50'
-                    : 'text-white hover:bg-white hover:bg-opacity-20'
-                    }`}
-                >
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
-                </button>
-
-                {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg z-50 overflow-hidden cinematic-card">
-                    <div className="p-4 border-b">
-                      <h3 className="font-semibold text-gray-900">Notifications</h3>
-                    </div>
-                    <div className="max-h-96 overflow-y-auto cinematic-scrollbar">
-                      {notifications.map(notification => (
-                        <div key={notification.id} className="p-4 border-b hover:bg-gray-50 transition-colors duration-200">
-                          <div className="flex items-start">
-                            <div className={`p-2 rounded-full mr-3 ${notification.type === 'vote' ? 'bg-indigo-100 text-indigo-600' :
-                              notification.type === 'comment' ? 'bg-green-100 text-green-600' :
-                                notification.type === 'status' ? 'bg-amber-100 text-amber-600' :
-                                  'bg-blue-100 text-blue-600'
-                              }`}>
-                              {notification.type === 'vote' ? <ThumbsUp className="h-5 w-5" /> :
-                                notification.type === 'comment' ? <MessageCircle className="h-5 w-5" /> :
-                                  notification.type === 'status' ? <RefreshCw className="h-5 w-5" /> :
-                                    <Bell className="h-5 w-5" />}
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-800">{notification.message}</p>
-                              <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="p-3 text-center border-t">
-                      <button className="text-sm font-medium text-indigo-600 hover:text-indigo-800">
-                        View all notifications
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
 
               {isAuthenticated ? (
                 <div className="relative" ref={userMenuRef}>
@@ -765,13 +717,13 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-gray-50 to-transparent"></div>
+        {/* <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-gray-50 to-transparent"></div> */}
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 ">
         {/* Filters and Controls */}
-        <div id="issues" className="sticky top-16 z-30 glass-card rounded-xl shadow-md p-4 mb-8">
+        <div id="issues" className="sticky top-16 z-30 glass-card rounded-xl shadow-md p-4 mb-8 dark:bg-gray-800 dark:border dark:border-gray-700">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex overflow-x-auto pb-2 md:pb-0 scrollbar-hide space-x-2">
               {['all', 'posted', 'waitlist', 'in_progress', 'completed'].map((status) => (
@@ -781,8 +733,8 @@ const Dashboard = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${filter === status
-                    ? 'cinematic-button text-white shadow-md'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                      ? 'cinematic-button text-white shadow-md'
+                      : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:border-gray-600'
                     } transition-all duration-200`}
                 >
                   {status === 'all' ? 'All Issues' : getStatusText(status as Post['status'])}
@@ -794,46 +746,46 @@ const Dashboard = () => {
               <div className="relative" ref={categoryDropdownRef}>
                 <button
                   onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                  className="flex items-center justify-between w-full md:w-48 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                  className="flex items-center justify-between w-full md:w-48 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                 >
-                  <span className="text-sm font-medium truncate">
+                  <span className="text-sm font-medium truncate dark:text-gray-300">
                     {selectedCategories.length === 0
                       ? 'Categories'
                       : `${selectedCategories.length} selected`}
                   </span>
-                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                  <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                 </button>
 
                 {showCategoryDropdown && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg z-50 border border-gray-100 overflow-hidden cinematic-card">
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg z-50 border border-gray-100 overflow-hidden cinematic-card dark:bg-gray-800 dark:border-gray-700">
                     <div className="p-2 max-h-60 overflow-y-auto cinematic-scrollbar">
                       {categories.map((cat) => (
                         <div
                           key={cat}
-                          className="flex items-center px-3 py-2 hover:bg-indigo-50 rounded-lg cursor-pointer"
+                          className="flex items-center px-3 py-2 hover:bg-indigo-50 rounded-lg cursor-pointer dark:hover:bg-indigo-900"
                           onClick={() => toggleCategorySelection(cat)}
                         >
                           <input
                             type="checkbox"
                             checked={selectedCategories.includes(cat)}
                             onChange={() => { }}
-                            className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                            className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600"
                           />
-                          <span className="ml-2 text-sm">{cat}</span>
+                          <span className="ml-2 text-sm dark:text-gray-300">{cat}</span>
                         </div>
                       ))}
                     </div>
                     {selectedCategories.length > 0 && (
-                      <div className="border-t p-2 flex justify-between">
+                      <div className="border-t p-2 flex justify-between dark:border-gray-700">
                         <button
                           onClick={() => setSelectedCategories([])}
-                          className="text-xs text-gray-500 hover:text-gray-700"
+                          className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                         >
                           Clear all
                         </button>
                         <button
                           onClick={() => setShowCategoryDropdown(false)}
-                          className="text-xs text-indigo-600 font-medium hover:text-indigo-800"
+                          className="text-xs text-indigo-600 font-medium hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
                         >
                           Apply
                         </button>
@@ -846,14 +798,14 @@ const Dashboard = () => {
               <div className="relative" ref={filtersRef}>
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                  className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                 >
-                  <Filter className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-medium">Sort</span>
+                  <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  <span className="text-sm font-medium dark:text-gray-300">Sort</span>
                 </button>
 
                 {showFilters && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg z-50 border border-gray-100 overflow-hidden cinematic-card">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg z-50 border border-gray-100 overflow-hidden cinematic-card dark:bg-gray-800 dark:border-gray-700">
                     <div className="p-2">
                       {[
                         { value: 'votes', label: 'Most Votes', icon: <ThumbsUp className="h-4 w-4" /> },
@@ -862,7 +814,7 @@ const Dashboard = () => {
                       ].map((option) => (
                         <div
                           key={option.value}
-                          className={`flex items-center px-3 py-2 hover:bg-indigo-50 rounded-lg cursor-pointer ${sortBy === option.value ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700'
+                          className={`flex items-center px-3 py-2 hover:bg-indigo-50 rounded-lg cursor-pointer ${sortBy === option.value ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300'
                             }`}
                           onClick={() => {
                             setSortBy(option.value);
@@ -878,10 +830,11 @@ const Dashboard = () => {
                 )}
               </div>
 
-              <div className="flex border border-gray-200 rounded-lg overflow-hidden">
+              <div className="flex border border-gray-200 rounded-lg overflow-hidden dark:border-gray-700">
                 <button
                   onClick={() => setActiveView('grid')}
-                  className={`p-2 ${activeView === 'grid' ? 'bg-indigo-50 text-indigo-600' : 'bg-white text-gray-500'}`}
+                  className={`p-2 ${activeView === 'grid' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300' : 'bg-white text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                    }`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -889,7 +842,8 @@ const Dashboard = () => {
                 </button>
                 <button
                   onClick={() => setActiveView('list')}
-                  className={`p-2 ${activeView === 'list' ? 'bg-indigo-50 text-indigo-600' : 'bg-white text-gray-500'}`}
+                  className={`p-2 ${activeView === 'list' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300' : 'bg-white text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                    }`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -908,10 +862,10 @@ const Dashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
-              className="cinematic-card p-6 mb-8"
+              className="cinematic-card p-6 mb-8 dark:bg-gray-800 dark:border dark:border-gray-700"
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Report a Community Issue</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Report a Community Issue</h2>
                 <button
                   onClick={() => {
                     setShowNewPost(false);
@@ -921,7 +875,7 @@ const Dashboard = () => {
                     setPreviewUrl(null);
                     setCategory('');
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -929,27 +883,27 @@ const Dashboard = () => {
 
               <form onSubmit={handleSubmit}>
                 <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-medium mb-2">
+                  <label className="block text-gray-700 text-sm font-medium mb-2 dark:text-gray-300">
                     Title
                   </label>
                   <input
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="cinematic-input"
+                    className="cinematic-input dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                     placeholder="Brief title of the issue"
                     required
                   />
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-medium mb-2">
+                  <label className="block text-gray-700 text-sm font-medium mb-2 dark:text-gray-300">
                     Category
                   </label>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="cinematic-input"
+                    className="cinematic-input dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                     required
                   >
                     <option value="">Select a category</option>
@@ -960,7 +914,7 @@ const Dashboard = () => {
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-medium mb-2">
+                  <label className="block text-gray-700 text-sm font-medium mb-2 dark:text-gray-300">
                     Location
                   </label>
                   <div className="flex">
@@ -968,13 +922,13 @@ const Dashboard = () => {
                       type="text"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      className="cinematic-input rounded-r-none"
+                      className="cinematic-input rounded-r-none dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                       placeholder="Location of the issue"
                       required
                     />
                     <button
                       type="button"
-                      className="bg-indigo-100 text-indigo-600 px-3 rounded-r-lg border border-l-0 border-gray-200 hover:bg-indigo-200 transition-colors duration-200"
+                      className="bg-indigo-100 text-indigo-600 px-3 rounded-r-lg border border-l-0 border-gray-200 hover:bg-indigo-200 transition-colors duration-200 dark:bg-indigo-700 dark:text-indigo-100 dark:border-gray-600 dark:hover:bg-indigo-600"
                       onClick={() => {
                         if (navigator.geolocation) {
                           navigator.geolocation.getCurrentPosition(
@@ -1007,13 +961,13 @@ const Dashboard = () => {
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-medium mb-2">
+                  <label className="block text-gray-700 text-sm font-medium mb-2 dark:text-gray-300">
                     Description
                   </label>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="cinematic-input"
+                    className="cinematic-input dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                     rows={4}
                     placeholder="Detailed description of the issue"
                     required
@@ -1021,7 +975,7 @@ const Dashboard = () => {
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-gray-700 text-sm font-medium mb-2">
+                  <label className="block text-gray-700 text-sm font-medium mb-2 dark:text-gray-300">
                     Media (Image or Video)
                   </label>
                   <input
@@ -1033,7 +987,7 @@ const Dashboard = () => {
                   />
                   <label
                     htmlFor="media-upload-dashboard"
-                    className="cursor-pointer flex items-center justify-center border-2 border-dashed border-indigo-200 rounded-lg p-6 hover:border-indigo-400 transition-colors duration-200"
+                    className="cursor-pointer flex items-center justify-center border-2 border-dashed border-indigo-200 rounded-lg p-6 hover:border-indigo-400 transition-colors duration-200 dark:border-indigo-700 dark:hover:border-indigo-600"
                   >
                     {previewUrl ? (
                       <img
@@ -1043,8 +997,8 @@ const Dashboard = () => {
                       />
                     ) : (
                       <div className="text-center">
-                        <Camera className="mx-auto h-12 w-12 text-indigo-300" />
-                        <p className="mt-2 text-sm text-indigo-500">
+                        <Camera className="mx-auto h-12 w-12 text-indigo-300 dark:text-indigo-400" />
+                        <p className="mt-2 text-sm text-indigo-500 dark:text-indigo-400">
                           Click to upload media (optional)
                         </p>
                       </div>
@@ -1058,7 +1012,7 @@ const Dashboard = () => {
                     disabled={uploading}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 cinematic-button py-3 px-4 text-white rounded-lg"
+                    className="flex-1 cinematic-button py-3 px-4 text-white rounded-lg dark:bg-indigo-700 dark:hover:bg-indigo-600"
                   >
                     {uploading ? (
                       <div className="flex items-center justify-center">
@@ -1084,7 +1038,7 @@ const Dashboard = () => {
                     }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 btn-secondary"
+                    className="flex-1 btn-secondary dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
                   >
                     Cancel
                   </motion.button>
@@ -1106,11 +1060,11 @@ const Dashboard = () => {
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-lg mb-6">
+          <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-lg mb-6 dark:bg-red-900 dark:border-red-800 dark:text-red-100">
             <p className="font-medium">{error}</p>
             <button
               onClick={() => fetchPosts()}
-              className="mt-2 text-sm font-medium underline"
+              className="mt-2 text-sm font-medium underline dark:text-red-200"
             >
               Try again
             </button>
@@ -1126,7 +1080,7 @@ const Dashboard = () => {
                 {filteredPosts.map((post) => (
                   <motion.div
                     key={post._id}
-                    className="cinematic-card cinematic-card-hover overflow-hidden"
+                    className="cinematic-card cinematic-card-hover overflow-hidden dark:bg-gray-800 dark:border dark:border-gray-700"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
@@ -1139,8 +1093,8 @@ const Dashboard = () => {
                           {post.user.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{post.user.name}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="font-medium text-gray-900 dark:text-gray-100">{post.user.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
                             {new Date(post.createdAt).toLocaleDateString(undefined, {
                               year: 'numeric',
                               month: 'short',
@@ -1149,12 +1103,11 @@ const Dashboard = () => {
                           </p>
                         </div>
                       </div>
-                      <div className={`status-badge ${getStatusClass(post.status)} cinematic-badge`}>
+                      <div className={`status-badge ${getStatusClass(post.status)} cinematic-badge dark:bg-gray-200`}>
                         {getStatusIcon(post.status)}
                         <span className="ml-1">{getStatusText(post.status)}</span>
                       </div>
                     </div>
-
 
                     {/* Media */}
                     {post.media && (
@@ -1174,32 +1127,32 @@ const Dashboard = () => {
                         )}
                       </div>
                     )}
-                    
+
                     {/* Post Content */}
                     <div className="p-4">
-                      <h2 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{post.title}</h2>
-                      <p className="text-gray-700 mb-3 text-sm line-clamp-2">{post.description}</p>
+                      <h2 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 dark:text-gray-100">{post.title}</h2>
+                      <p className="text-gray-700 mb-3 text-sm line-clamp-2 dark:text-gray-300">{post.description}</p>
 
                       <div className="flex flex-wrap gap-2 mb-3">
                         {post.category && (
-                          <span className="cinematic-badge">
+                          <span className="cinematic-badge dark:bg-gray-700 dark:text-gray-100">
                             {post.category}
                           </span>
                         )}
                         {post.location && (
-                          <span className="cinematic-badge flex items-center">
+                          <span className="cinematic-badge flex items-center dark:bg-gray-700 dark:text-gray-100">
                             <MapPin className="h-3 w-3 mr-1" />
                             {post.location}
                           </span>
                         )}
                       </div>
 
-                      <div className="flex items-center justify-between border-t pt-3">
+                      <div className="flex items-center justify-between border-t pt-3 dark:border-gray-700">
                         <motion.button
                           onClick={() => handleVote(post._id)}
                           className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg ${post.votes.includes(userId)
-                            ? 'bg-indigo-100 text-indigo-600'
-                            : 'text-gray-600 hover:bg-gray-100'
+                              ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300'
+                              : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
                             } transition-colors duration-200`}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.9 }}
@@ -1212,14 +1165,14 @@ const Dashboard = () => {
                           <span className="font-medium">{post.votes.length}</span>
                         </motion.button>
                         <button
-                          className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200"
+                          className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200 dark:text-gray-400 dark:hover:bg-gray-700"
                           onClick={() => setExpandedPost(expandedPost === post._id ? null : post._id)}
                         >
                           <MessageCircle className="h-5 w-5" />
                           <span>{post.comments ? post.comments.length : 0}</span>
                         </button>
                         <button
-                          className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200"
+                          className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200 dark:text-gray-400 dark:hover:bg-gray-700"
                           onClick={() => handleShare(post._id)}
                         >
                           <Share2 className="h-5 w-5" />
@@ -1230,13 +1183,13 @@ const Dashboard = () => {
                       <AnimatePresence>
                         {expandedPost === post._id && (
                           <motion.div
-                            className="mt-4 border-t pt-4"
+                            className="mt-4 border-t pt-4 dark:border-gray-700"
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.3 }}
                           >
-                            <h3 className="font-medium text-gray-900 mb-3">Comments</h3>
+                            <h3 className="font-medium text-gray-900 mb-3 dark:text-gray-100">Comments</h3>
 
                             <div className="max-h-60 overflow-y-auto cinematic-scrollbar pr-2">
                               {post.comments && post.comments.length > 0 ? (
@@ -1247,11 +1200,11 @@ const Dashboard = () => {
                                         {comment.user.name.charAt(0).toUpperCase()}
                                       </div>
                                       <div className="flex-1">
-                                        <div className="bg-gray-50 p-3 rounded-lg">
-                                          <p className="font-medium text-sm text-gray-900">{comment.user.name}</p>
-                                          <p className="text-gray-700 text-sm">{comment.text}</p>
+                                        <div className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
+                                          <p className="font-medium text-sm text-gray-900 dark:text-gray-100">{comment.user.name}</p>
+                                          <p className="text-gray-700 text-sm dark:text-gray-300">{comment.text}</p>
                                         </div>
-                                        <p className="text-xs text-gray-500 mt-1">
+                                        <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">
                                           {new Date(comment.createdAt).toLocaleString(undefined, {
                                             month: 'short',
                                             day: 'numeric',
@@ -1264,7 +1217,7 @@ const Dashboard = () => {
                                   ))}
                                 </div>
                               ) : (
-                                <p className="text-gray-500 text-sm mb-4">No comments yet. Be the first to comment!</p>
+                                <p className="text-gray-500 text-sm mb-4 dark:text-gray-400">No comments yet. Be the first to comment!</p>
                               )}
                             </div>
 
@@ -1279,7 +1232,7 @@ const Dashboard = () => {
                                   value={commentText[post._id] || ''}
                                   onChange={(e) => setCommentText({ ...commentText, [post._id]: e.target.value })}
                                   placeholder="Add a comment..."
-                                  className="flex-1 cinematic-input rounded-r-none"
+                                  className="flex-1 cinematic-input rounded-r-none dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                                   onKeyPress={(e) => {
                                     if (e.key === 'Enter') {
                                       handleAddComment(post._id);
@@ -1288,7 +1241,7 @@ const Dashboard = () => {
                                 />
                                 <motion.button
                                   onClick={() => handleAddComment(post._id)}
-                                  className="cinematic-button text-white px-3 py-2 rounded-r-lg"
+                                  className="cinematic-button text-white px-3 py-2 rounded-r-lg dark:bg-indigo-700 dark:hover:bg-indigo-600"
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
                                 >
@@ -1312,7 +1265,7 @@ const Dashboard = () => {
                   <motion.div
                     key={post._id}
                     className={`cinematic-card cinematic-card-hover overflow-hidden ${selectedPost?._id === post._id ? 'border-2 border-indigo-500' : ''
-                      }`}
+                      } dark:bg-gray-800 dark:border dark:border-gray-700`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
@@ -1347,8 +1300,8 @@ const Dashboard = () => {
                               {post.user.name.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900">{post.user.name}</p>
-                              <p className="text-xs text-gray-500">
+                              <p className="font-medium text-gray-900 dark:text-gray-100">{post.user.name}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
                                 {new Date(post.createdAt).toLocaleDateString(undefined, {
                                   year: 'numeric',
                                   month: 'short',
@@ -1357,38 +1310,38 @@ const Dashboard = () => {
                               </p>
                             </div>
                           </div>
-                          <div className={`status-badge ${getStatusClass(post.status)} cinematic-badge`}>
+                          <div className={`status-badge ${getStatusClass(post.status)} cinematic-badge dark:bg-gray-700`}>
                             {getStatusIcon(post.status)}
                             <span className="ml-1">{getStatusText(post.status)}</span>
                           </div>
                         </div>
 
-                        <h2 className="text-xl font-semibold text-gray-900 mb-2">{post.title}</h2>
-                        <p className="text-gray-700 mb-3">{post.description}</p>
+                        <h2 className="text-xl font-semibold text-gray-900 mb-2 dark:text-gray-100">{post.title}</h2>
+                        <p className="text-gray-700 mb-3 dark:text-gray-300">{post.description}</p>
 
                         <div className="flex flex-wrap gap-2 mb-3">
                           {post.category && (
-                            <span className="cinematic-badge">
+                            <span className="cinematic-badge dark:bg-gray-700 dark:text-gray-100">
                               {post.category}
                             </span>
                           )}
                           {post.location && (
-                            <span className="cinematic-badge flex items-center">
+                            <span className="cinematic-badge flex items-center dark:bg-gray-700 dark:text-gray-100">
                               <MapPin className="h-3 w-3 mr-1" />
                               {post.location}
                             </span>
                           )}
                         </div>
 
-                        <div className="flex items-center justify-between border-t pt-3">
+                        <div className="flex items-center justify-between border-t pt-3 dark:border-gray-700">
                           <motion.button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleVote(post._id);
                             }}
                             className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg ${post.votes.includes(userId)
-                              ? 'bg-indigo-100 text-indigo-600'
-                              : 'text-gray-600 hover:bg-gray-100'
+                                ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300'
+                                : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
                               } transition-colors duration-200`}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.9 }}
@@ -1401,7 +1354,7 @@ const Dashboard = () => {
                             <span className="font-medium">{post.votes.length}</span>
                           </motion.button>
                           <button
-                            className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200"
+                            className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200 dark:text-gray-400 dark:hover:bg-gray-700"
                             onClick={(e) => {
                               e.stopPropagation();
                               setExpandedPost(expandedPost === post._id ? null : post._id);
@@ -1411,7 +1364,7 @@ const Dashboard = () => {
                             <span>{post.comments ? post.comments.length : 0}</span>
                           </button>
                           <button
-                            className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200"
+                            className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200 dark:text-gray-400 dark:hover:bg-gray-700"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleShare(post._id);
@@ -1425,14 +1378,14 @@ const Dashboard = () => {
                         <AnimatePresence>
                           {expandedPost === post._id && (
                             <motion.div
-                              className="mt-4 border-t pt-4"
+                              className="mt-4 border-t pt-4 dark:border-gray-700"
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: 'auto' }}
                               exit={{ opacity: 0, height: 0 }}
                               transition={{ duration: 0.3 }}
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <h3 className="font-medium text-gray-900 mb-3">Comments</h3>
+                              <h3 className="font-medium text-gray-900 mb-3 dark:text-gray-100">Comments</h3>
 
                               <div className="max-h-60 overflow-y-auto cinematic-scrollbar pr-2">
                                 {post.comments && post.comments && post.comments.length > 0 ? (
@@ -1443,11 +1396,11 @@ const Dashboard = () => {
                                           {comment.user.name.charAt(0).toUpperCase()}
                                         </div>
                                         <div className="flex-1">
-                                          <div className="bg-gray-50 p-3 rounded-lg">
-                                            <p className="font-medium text-sm text-gray-900">{comment.user.name}</p>
-                                            <p className="text-gray-700 text-sm">{comment.text}</p>
+                                          <div className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
+                                            <p className="font-medium text-sm text-gray-900 dark:text-gray-100">{comment.user.name}</p>
+                                            <p className="text-gray-700 text-sm dark:text-gray-300">{comment.text}</p>
                                           </div>
-                                          <p className="text-xs text-gray-500 mt-1">
+                                          <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">
                                             {new Date(comment.createdAt).toLocaleString(undefined, {
                                               month: 'short',
                                               day: 'numeric',
@@ -1460,7 +1413,7 @@ const Dashboard = () => {
                                     ))}
                                   </div>
                                 ) : (
-                                  <p className="text-gray-500 text-sm mb-4">No comments yet. Be the first to comment!</p>
+                                  <p className="text-gray-500 text-sm mb-4 dark:text-gray-400">No comments yet. Be the first to comment!</p>
                                 )}
                               </div>
 
@@ -1475,7 +1428,7 @@ const Dashboard = () => {
                                     value={commentText[post._id] || ''}
                                     onChange={(e) => setCommentText({ ...commentText, [post._id]: e.target.value })}
                                     placeholder="Add a comment..."
-                                    className="flex-1 cinematic-input rounded-r-none"
+                                    className="flex-1 cinematic-input rounded-r-none dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                                     onKeyPress={(e) => {
                                       if (e.key === 'Enter') {
                                         handleAddComment(post._id);
@@ -1484,7 +1437,7 @@ const Dashboard = () => {
                                   />
                                   <motion.button
                                     onClick={() => handleAddComment(post._id)}
-                                    className="cinematic-button text-white px-3 py-2 rounded-r-lg"
+                                    className="cinematic-button text-white px-3 py-2 rounded-r-lg dark:bg-indigo-700 dark:hover:bg-indigo-600"
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                   >
@@ -1503,16 +1456,16 @@ const Dashboard = () => {
             )}
           </>
         ) : !loading && (
-          <div className="text-center py-16 cinematic-card">
+          <div className="text-center py-16 cinematic-card dark:bg-gray-800 dark:border dark:border-gray-700">
             <div className="max-w-md mx-auto">
               <div className="mb-6 relative cinematic-glow">
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-32 w-32 rounded-full bg-indigo-100 animate-pulse-slow"></div>
+                  <div className="h-32 w-32 rounded-full bg-indigo-100 animate-pulse-slow dark:bg-indigo-900"></div>
                 </div>
-                <AlertTriangle className="h-16 w-16 text-indigo-400 mx-auto relative z-10" />
+                <AlertTriangle className="h-16 w-16 text-indigo-400 mx-auto relative z-10 dark:text-indigo-500" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">No issues found</h3>
-              <p className="text-gray-500 mb-6">Try adjusting your search or filter criteria</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-2 dark:text-gray-100">No issues found</h3>
+              <p className="text-gray-500 mb-6 dark:text-gray-400">Try adjusting your search or filter criteria</p>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -1521,7 +1474,7 @@ const Dashboard = () => {
                   setSearchTerm('');
                   setSelectedCategories([]);
                 }}
-                className="cinematic-button py-2 px-5 text-white font-medium rounded-lg mx-auto"
+                className="cinematic-button py-2 px-5 text-white font-medium rounded-lg mx-auto dark:bg-indigo-700 dark:hover:bg-indigo-600"
               >
                 Reset Filters
               </motion.button>
@@ -1559,7 +1512,7 @@ const Dashboard = () => {
                     }
                     setShowNewPost(true);
                   }}
-                  className="cinematic-button py-3 px-8 text-white font-medium rounded-lg flex items-center"
+                  className="cinematic-button py-3 px-8 text-white font-medium rounded-lg flex items-center dark:bg-indigo-700 dark:hover:bg-indigo-600"
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   Report an Issue
@@ -1570,7 +1523,7 @@ const Dashboard = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => navigate('/login')}
-                    className="bg-white text-indigo-700 py-3 px-8 rounded-lg hover:bg-opacity-90 transition-all duration-200 flex items-center font-medium"
+                    className="bg-white text-indigo-700 py-3 px-8 rounded-lg hover:bg-opacity-90 transition-all duration-200 flex items-center font-medium dark:bg-gray-100 dark:text-indigo-700 dark:hover:bg-gray-200"
                   >
                     <UserCircle className="w-5 h-5 mr-2" />
                     Create Account
@@ -1587,7 +1540,7 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-2xl font-bold text-gradient-secondary mb-4">CivicConnect</h3>
+              <h3 className="text-2xl font-bold text-gradient-secondary mb-4">109Cops</h3>
               <p className="text-gray-400 mb-4">
                 Empowering communities through collaboration and civic engagement.
               </p>
@@ -1644,7 +1597,7 @@ const Dashboard = () => {
 
           <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              © 2025 CivicConnect. All rights reserved.
+              © 2025 109Cops. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors duration-200">Privacy Policy</a>

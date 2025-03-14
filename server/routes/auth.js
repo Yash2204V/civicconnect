@@ -8,7 +8,7 @@ const router = express.Router();
 // Register a new user
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, phone, address, bio } = req.body;
 
     // Check if user already exists
     let user = await User.findOne({ email });
@@ -20,7 +20,10 @@ router.post('/register', async (req, res) => {
     user = await User.create({
       name,
       email,
-      password
+      password,
+      phone,
+      address,
+      bio
     });
 
     // Hash password
@@ -34,7 +37,10 @@ router.post('/register', async (req, res) => {
     res.json({ 
       userId: user._id, 
       name: user.name, 
-      email: user.email, 
+      email: user.email,
+      phone: user.phone,
+      address: user.address,
+      bio: user.bio,
       role: user.role,
       message: 'Registration successful' 
     });
@@ -58,7 +64,10 @@ router.post('/login', async (req, res) => {
       return res.json({ 
         userId: 'demo-user-id', 
         name: 'Demo User', 
-        email: 'user@example.com', 
+        email: 'user@example.com',
+        phone: '123-456-7890',
+        address: '123 Demo Street, Demo City',
+        bio: 'Demo user bio',
         role: 'user',
         message: 'Login successful' 
       });
@@ -68,7 +77,10 @@ router.post('/login', async (req, res) => {
       return res.json({ 
         userId: 'admin-user-id', 
         name: 'Admin User', 
-        email: 'admin@example.com', 
+        email: 'admin@example.com',
+        phone: '987-654-3210',
+        address: '456 Admin Avenue, Admin City',
+        bio: 'Admin user bio',
         role: 'admin',
         message: 'Login successful' 
       });
@@ -90,7 +102,10 @@ router.post('/login', async (req, res) => {
     res.json({ 
       userId: user._id, 
       name: user.name, 
-      email: user.email, 
+      email: user.email,
+      phone: user.phone,
+      address: user.address,
+      bio: user.bio,
       role: user.role,
       message: 'Login successful' 
     });
