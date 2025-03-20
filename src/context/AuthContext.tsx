@@ -16,6 +16,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, phone: string, address: string, bio: string) => Promise<void>;
+  updateProfile: (data: Partial<User>) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -108,6 +109,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateProfile = async (data: Partial<User>) => {
+    if (!isAuthenticated) {
+      throw new Error('You must be logged in to update your profile');
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.patch('http://localhost:5000/api/auth/update-profile', data);
+      
+      const updatedUserData = {
+        ...user,
+        ...response.data,
+      };
+
+      // Update localStorage
+      localStorage.setItem('userData', JSON.stringify(updatedUserData));
+      
+      setUser(updatedUserData);
+    } catch (error) {
+      console.error('Profile update error:', error);
+      throw new Error('Profile update failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     // Remove user data from localStorage
     localStorage.removeItem('userData');
@@ -120,7 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, register, updateProfile, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

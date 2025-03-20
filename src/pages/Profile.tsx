@@ -61,7 +61,7 @@ const categories = [
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, updateProfile } = useAuth();
   const { userPosts, loading, error, fetchUserPosts, createPost, updatePost, deletePost } = usePosts();
 
   const [title, setTitle] = useState('');
@@ -76,9 +76,9 @@ const Profile = () => {
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: user?.name || '',
     email: user?.email || '',
-    phone: '',
-    address: '',
-    bio: ''
+    phone: user?.phone || '',
+    address: user?.address || '',
+    bio: user?.bio || ''
   });
   const [activeTab, setActiveTab] = useState('posts');
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
@@ -132,7 +132,8 @@ const Profile = () => {
         name: user.name,
         email: user.email || '',
         phone: user.phone || '',
-        address: user.address || ''
+        address: user.address || '',
+        bio: user.bio || ''
       }));
     }
   }, [user]);
@@ -216,13 +217,31 @@ const Profile = () => {
     }
   };
 
-  const handleSaveProfile = () => {
-    // In a real app, this would update the user profile on the server
-    // For now, we'll just show a success message
-    alert('Profile updated successfully!');
-    setShowSettings(false);
-    setIsEditingBio(false);
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      // Only send fields that have changed
+      const updates: { [key: string]: string } = {};
+      if (user && userProfile.name !== user.name) updates.name = userProfile.name;
+      if (user && userProfile.email !== user.email) updates.email = userProfile.email;
+      if (user && userProfile.phone !== user.phone) updates.phone = userProfile.phone;
+      if (user && userProfile.address !== user.address) updates.address = userProfile.address;
+      if (user && userProfile.bio !== user.bio) updates.bio = userProfile.bio;
+
+      if (Object.keys(updates).length > 0) {
+        await updateProfile(updates);
+      }
+
+      alert('Profile updated successfully!');
+      setShowSettings(false);
+      setIsEditingBio(false);
+    } catch (err) {
+      console.error('Failed to update profile. Please try again.', err);
+    }
   };
+
+
 
   const confirmDeletePost = () => {
     // In a real app, this would delete the post

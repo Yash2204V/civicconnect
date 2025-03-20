@@ -133,6 +133,43 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
+// Update user profile
+router.patch('/update-profile', auth, async (req, res) => {
+  try {
+    const { name, email, phone, address, bio } = req.body;
+    
+    // Find user and update
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update only provided fields
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (phone) user.phone = phone;
+    if (address) user.address = address;
+    if (bio) user.bio = bio;
+
+    await user.save();
+
+    // Return updated user info
+    res.json({
+      userId: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      address: user.address,
+      bio: user.bio,
+      role: user.role,
+      message: 'Profile updated successfully'
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Test route to check database connection
 router.get('/test-db', async (req, res) => {
   try {
