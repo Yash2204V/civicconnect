@@ -501,7 +501,15 @@ const Dashboard = () => {
                     className="relative"
                   >
                     <div className="h-10 w-10 rounded-full bg-gradient-primary flex items-center justify-center text-white font-medium shadow-md">
-                      {user?.name.charAt(0).toUpperCase()}
+                      {user?.profilePicUrl ? (
+                        <img
+                          src={user.profilePicUrl}
+                          alt={user.name}
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      ) : (
+                        <span>{user?.name.charAt(0).toUpperCase()}</span>
+                      )}
                     </div>
                     <span className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></span>
                   </button>
@@ -733,8 +741,8 @@ const Dashboard = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${filter === status
-                      ? 'cinematic-button text-white shadow-md'
-                      : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:border-gray-600'
+                    ? 'cinematic-button text-white shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:border-gray-600'
                     } transition-all duration-200`}
                 >
                   {status === 'all' ? 'All Issues' : getStatusText(status as Post['status'])}
@@ -1151,8 +1159,8 @@ const Dashboard = () => {
                         <motion.button
                           onClick={() => handleVote(post._id)}
                           className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg ${post.votes.includes(userId)
-                              ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300'
-                              : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+                            ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300'
+                            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
                             } transition-colors duration-200`}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.9 }}
@@ -1340,8 +1348,8 @@ const Dashboard = () => {
                               handleVote(post._id);
                             }}
                             className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg ${post.votes.includes(userId)
-                                ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300'
-                                : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+                              ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300'
+                              : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
                               } transition-colors duration-200`}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.9 }}

@@ -9,6 +9,7 @@ interface User {
   address: string;
   bio: string;
   role: string;
+  profilePicUrl?: string;
 }
 
 interface AuthContextType {
@@ -17,6 +18,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, phone: string, address: string, bio: string) => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  updateProfilePic: (file: File) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -52,7 +54,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         phone: response.data.phone,
         address: response.data.address,
         bio: response.data.bio,
-        role: response.data.role
+        role: response.data.role,
+        profilePicUrl: response.data.profilePicUrl
       };
       
       // Save user data to localStorage
@@ -90,7 +93,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         phone: response.data.phone,
         address: response.data.address,
         bio: response.data.bio,
-        role: response.data.role
+        role: response.data.role,
+        profilePicUrl: response.data.profilePicUrl
       };
 
       // Save user data to localStorage
@@ -135,6 +139,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateProfilePic = async (file: File) => {
+    if (!isAuthenticated) {
+      throw new Error('You must be logged in to update your profile picture');
+    }
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('profilePic', file);
+
+      const response = await axios.patch('http://localhost:5000/api/auth/update-profile-pic', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      const updatedUserData = {
+        ...user,
+        ...response.data,
+      };
+
+      // Update localStorage
+      localStorage.setItem('userData', JSON.stringify(updatedUserData));
+      
+      setUser(updatedUserData);
+    } catch (error) {
+      console.error('Profile picture update error:', error);
+      throw new Error('Profile picture update failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     // Remove user data from localStorage
     localStorage.removeItem('userData');
@@ -147,7 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, register, updateProfile, logout, loading }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, register, updateProfile, updateProfilePic, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

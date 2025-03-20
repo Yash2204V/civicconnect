@@ -1,9 +1,19 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
+import multer from 'multer';
 import User from '../models/User.js';
 import { auth } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// Configure multer for memory storage
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});
 
 // Register a new user
 router.post('/register', async (req, res) => {
@@ -98,6 +108,13 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    // Convert profile pic to base64 if it exists
+    let profilePicUrl;
+    if (user.profilePic && user.profilePic.data) {
+      const base64 = Buffer.from(user.profilePic.data).toString('base64');
+      profilePicUrl = `data:${user.profilePic.contentType};base64,${base64}`;
+    }
+
     // Return user info for simple authentication
     res.json({ 
       userId: user._id, 
@@ -107,6 +124,7 @@ router.post('/login', async (req, res) => {
       address: user.address,
       bio: user.bio,
       role: user.role,
+      profilePicUrl,
       message: 'Login successful' 
     });
   } catch (error) {
@@ -126,7 +144,18 @@ router.get('/me', auth, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json(user);
+
+    // Convert profile pic to base64 if it exists
+    let profilePicUrl;
+    if (user.profilePic && user.profilePic.data) {
+      const base64 = Buffer.from(user.profilePic.data).toString('base64');
+      profilePicUrl = `data:${user.profilePic.contentType};base64,${base64}`;
+    }
+
+    res.json({
+      ...user.toObject(),
+      profilePicUrl
+    });
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({ message: 'Server error' });
@@ -153,6 +182,13 @@ router.patch('/update-profile', auth, async (req, res) => {
 
     await user.save();
 
+    // Convert profile pic to base64 if it exists
+    let profilePicUrl;
+    if (user.profilePic && user.profilePic.data) {
+      const base64 = Buffer.from(user.profilePic.data).toString('base64');
+      profilePicUrl = `data:${user.profilePic.contentType};base64,${base64}`;
+    }
+
     // Return updated user info
     res.json({
       userId: user._id,
@@ -162,10 +198,52 @@ router.patch('/update-profile', auth, async (req, res) => {
       address: user.address,
       bio: user.bio,
       role: user.role,
+      profilePicUrl,
       message: 'Profile updated successfully'
     });
   } catch (error) {
     console.error('Profile update error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Update profile picture
+router.patch('/update-profile-pic', auth, upload.single('profilePic'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update profile picture
+    user.profilePic = {
+      data: req.file.buffer,
+      contentType: req.file.mimetype
+    };
+
+    await user.save();
+
+    // Convert profile pic to base64
+    const base64 = Buffer.from(user.profilePic.data).toString('base64');
+    const profilePicUrl = `data:${user.profilePic.contentType};base64,${base64}`;
+
+    res.json({
+      userId: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      address: user.address,
+      bio: user.bio,
+      role: user.role,
+      profilePicUrl,
+      message: 'Profile picture updated successfully'
+    });
+  } catch (error) {
+    console.error('Profile picture update error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
