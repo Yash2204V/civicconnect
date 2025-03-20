@@ -1,5 +1,6 @@
 import express from 'express';
 import multer from 'multer';
+import mongoose from 'mongoose';
 import Post from '../models/Post.js';
 import Comment from '../models/Comment.js';
 import Vote from '../models/Vote.js';
@@ -127,9 +128,6 @@ router.patch('/:id', auth, upload.single('media'), async (req, res) => {
   try {
     const { title, description, mediaType, category, location } = req.body;
 
-    // console.log("I am here!!!!!!!!");
-    // console.log("Incoming file details:", req.file);
-
     // Find post and verify ownership
     const post = await Post.findById(req.params.id);
     if (!post) {
@@ -160,8 +158,6 @@ router.patch('/:id', auth, upload.single('media'), async (req, res) => {
       { new: true }
     ).populate('user', 'name email');
 
-    // console.log("UPDATEDPOST", updatedPost);
-
     // Get comments
     const comments = await Comment.find({ post: updatedPost._id }).populate('user', 'name');
 
@@ -183,7 +179,6 @@ router.patch('/:id', auth, upload.single('media'), async (req, res) => {
   }
 });
 
-
 // Delete post
 router.delete('/:id', auth, async (req, res) => {
   try {
@@ -194,10 +189,6 @@ router.delete('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    // Check if user owns the post
-    // if (post.user.toString() != req.user.userId) {
-    //   return res.status(403).json({ message: 'Not authorized to delete this post' });
-    // }
     if (!req.user.userId) {
       return res.status(403).json({ message: 'Not authorized to delete this post' });
     }
@@ -215,7 +206,6 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 
-
 // Delete post (admin only)
 router.delete('/admin/:id', adminAuth, async (req, res) => {
   try {
@@ -226,10 +216,6 @@ router.delete('/admin/:id', adminAuth, async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    // Check if user owns the post
-    // if (post.user.toString() != req.user.userId) {
-    //   return res.status(403).json({ message: 'Not authorized to delete this post' });
-    // }
     if (!req.user.userId) {
       return res.status(403).json({ message: 'Not authorized to delete this post' });
     }
@@ -393,16 +379,22 @@ router.post('/admin/:id/comment', adminAuth, async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    // Create new comment in comments collection
+    // Convert admin-user-id to ObjectId format
+    const adminUserId = new mongoose.Types.ObjectId(process.env.ADMIN_ID);
+    // console.log(adminUserId);
+
+    // Create new comment in comments collection with proper ObjectId
     const newComment = new Comment({
-      user: req.user.userId,
+      user: adminUserId,
       post: req.params.id,
       text
     });
+    // console.log(newComment);
+    
 
     await newComment.save();
 
-    // Return the new comment
+    // Return the new comment with populated user info
     const populatedComment = await Comment.findById(newComment._id).populate('user', 'name');
 
     res.status(201).json(populatedComment);

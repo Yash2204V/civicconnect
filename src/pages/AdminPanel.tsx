@@ -80,7 +80,7 @@ interface StatusData {
 
 const AdminPanel = () => {
   const navigate = useNavigate();
-  const { posts, loading, error, fetchPosts, updatePostStatus, adminDeletePost } = usePosts();
+  const { posts, loading, error, fetchPosts, updatePostStatus, adminDeletePost, adminAddComment } = usePosts();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
@@ -340,6 +340,20 @@ const AdminPanel = () => {
       date: new Date(new Date(post.createdAt).getTime() + index * 86400000)
     })))
   ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 10);
+
+  const handleCommentSubmit = async (postId: string) => {
+    if (!commentText.trim()) {
+      return;
+    }
+
+    try {
+      await adminAddComment(postId, commentText);
+      setCommentText('');
+      await fetchPosts();
+    } catch (err) {
+      console.error('Error adding comment:', err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 bg-dot-pattern dark:bg-gray-800 dark:cinematic-bg-pattern dark:border dark:border-gray-700">
@@ -1027,6 +1041,12 @@ const AdminPanel = () => {
                             />
                             <motion.button
                               className="bg-gradient-primary text-white px-3 py-2 rounded-r-lg transition-colors duration-200 dark:bg-indigo-700 dark:hover:bg-indigo-600"
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevents the event from bubbling up
+                                handleCommentSubmit(selectedPost._id)
+                                setSelectedPost(null);
+                              }}
+                              disabled={loading || !commentText.trim()}
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                             >
